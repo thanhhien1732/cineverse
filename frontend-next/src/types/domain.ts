@@ -44,6 +44,8 @@ export interface Combo {
   readonly unitPrice: number;
 }
 
+export interface Ticket { readonly id: string; readonly code: string; readonly movieTitle: string; readonly showtimeId: string; readonly seatLabels: readonly string[]; readonly total: number; }
+
 export interface BookingDraft {
   readonly movieId: string | null;
   readonly showtimeId: string | null;
