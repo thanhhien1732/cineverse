@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Danh sách phim đang chiếu và sắp chiếu tại CINEVERSE." />
+    <title>Danh sách phim | CINEVERSE</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div data-site-header></div>
+    <main>
+      <section class="page-hero">
+        <div class="container page-title">
+          <p class="eyebrow">KHÁM PHÁ CINEVERSE</p>
+          <h1>Danh sách phim</h1>
+          <p>
+            Tìm kiếm bộ phim phù hợp với bạn, xem thông tin chi tiết và bắt đầu
+            đặt vé chỉ trong vài bước.
+          </p>
+        </div>
+      </section>
+      <section class="section">
+        <div class="container">
+          <div class="catalog-tools">
+            <div class="filter-tabs" aria-label="Lọc theo trạng thái">
+              <button
+                class="filter-tab is-active"
+                type="button"
+                data-status-filter="all">
+                Tất cả
+              </button>
+              <button
+                class="filter-tab"
+                type="button"
+                data-status-filter="now-showing">
+                Đang chiếu
+              </button>
+              <button
+                class="filter-tab"
+                type="button"
+                data-status-filter="coming-soon">
+                Sắp chiếu
+              </button>
+            </div>
+            <div class="filter-boxes">
+              <label class="filter-wrap">
+                <span class="icon search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="6"></circle>
+                    <path d="M16 16l4.5 4.5"></path>
+                  </svg>
+                </span>
+                <input
+                  class="filter-input"
+                  type="search"
+                  placeholder="Tìm tên phim hoặc thể loại"
+                  data-search-input />
+              </label>
+              <div class="filter-select-wrap">
+                <select
+                  class="filter-select"
+                  aria-label="Lọc theo thể loại"
+                  data-genre-filter>
+                  <option value="all">Tất cả thể loại</option>
+                  <option value="Action">Action</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Crime">Crime</option>
+                  <option value="Drama">Drama</option>
+                  <option value="Family">Family</option>
+                  <option value="Fantasy">Fantasy</option>
+                  <option value="Horror">Horror</option>
+                  <option value="Mystery">Mystery</option>
+                  <option value="Romance">Romance</option>
+                  <option value="Sci-Fi">Sci-Fi</option>
+                  <option value="Thriller">Thriller</option>
+                </select>
+
+                <span class="filter-select-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="catalog-count" data-catalog-count></div>
+          <div class="catalog-grid" data-catalog-grid></div>
+        </div>
+      </section>
+    </main>
+    <div data-site-footer></div>
+    <script src="js/sync-bootstrap.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/movies.js"></script>
+  </body>
+</html>
