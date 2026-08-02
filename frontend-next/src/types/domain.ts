@@ -20,6 +20,8 @@ export interface Cinema {
   readonly id: string;
   readonly name: string;
   readonly areaName: string;
+  readonly address?: string;
+  readonly features?: readonly string[];
 }
 
 export interface Showtime {
@@ -42,9 +44,32 @@ export interface Combo {
   readonly id: string;
   readonly name: string;
   readonly unitPrice: number;
+  readonly description?: string;
+  readonly imagePath?: string;
+  readonly badge?: string;
 }
 
-export interface Ticket { readonly id: string; readonly code: string; readonly movieTitle: string; readonly showtimeId: string; readonly seatLabels: readonly string[]; readonly total: number; }
+export type TicketStatus = "valid" | "used" | "invalid";
+
+export interface Ticket {
+  readonly id: string;
+  readonly code: string;
+  readonly movieTitle: string;
+  readonly showtimeId: string;
+  readonly seatLabels: readonly string[];
+  readonly comboQuantities: Readonly<Record<string, number>>;
+  readonly total: number;
+  readonly customerName: string;
+  readonly customerEmail: string;
+  readonly createdAt: string;
+  readonly status: TicketStatus;
+}
+
+export interface StaffProfile {
+  readonly fullName: string;
+  readonly email: string;
+  readonly role: "gate-control-admin";
+}
 
 export interface BookingDraft {
   readonly movieId: string | null;

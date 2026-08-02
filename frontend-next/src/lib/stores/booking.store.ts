@@ -2,80 +2,29 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
-import type { BookingDraft } from "@/types/domain";
-import type { Ticket } from "@/types/domain";
+import type { BookingDraft, Ticket, TicketStatus } from "@/types/domain";
 
 interface BookingStore extends BookingDraft {
+  readonly tickets: readonly Ticket[];
   selectMovie(movieId: string): void;
   selectShowtime(showtimeId: string): void;
   toggleSeat(seatId: string): void;
   setComboQuantity(comboId: string, quantity: number): void;
   setCheckoutConfirmation(field: "acceptedTerms" | "confirmedAgeEligibility", value: boolean): void;
-  clearBooking(): void;
-  ticket: Ticket | null;
   issueTicket(ticket: Ticket): void;
+  markTicket(ticketId: string, status: TicketStatus): void;
+  clearBooking(): void;
 }
-
-const initialBookingDraft: BookingDraft = {
-  movieId: null,
-  showtimeId: null,
-  seatIds: [],
-  comboQuantities: {},
-  acceptedTerms: false,
-  confirmedAgeEligibility: false,
-};
-
-export const useBookingStore = create<BookingStore>()(
-  persist(
-    (set) => ({
-      ...initialBookingDraft,
-      selectMovie: (movieId) =>
-        set({
-          movieId,
-          showtimeId: null,
-          seatIds: [],
-          comboQuantities: {},
-          acceptedTerms: false,
-          confirmedAgeEligibility: false,
-        }),
-      selectShowtime: (showtimeId) => set({ showtimeId, seatIds: [] }),
-      toggleSeat: (seatId) =>
-        set((state) => ({
-          seatIds: state.seatIds.includes(seatId)
-            ? state.seatIds.filter((selectedSeatId) => selectedSeatId !== seatId)
-            : [...state.seatIds, seatId],
-        })),
-      setComboQuantity: (comboId, quantity) =>
-        set((state) => {
-          const normalizedQuantity = Math.max(0, Math.trunc(quantity));
-          const comboQuantities = { ...state.comboQuantities };
-
-          if (normalizedQuantity === 0) {
-            delete comboQuantities[comboId];
-          } else {
-            comboQuantities[comboId] = normalizedQuantity;
-          }
-
-          return { comboQuantities };
-        }),
-      setCheckoutConfirmation: (field, value) => set({ [field]: value }),
-      clearBooking: () => set(initialBookingDraft),
-      ticket: null,
-      issueTicket: (ticket) => set({ ticket }),
-    }),
-    {
-      name: "cineverse.booking-draft.v1",
-      storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => ({
-        movieId: state.movieId,
-        showtimeId: state.showtimeId,
-        seatIds: state.seatIds,
-        comboQuantities: state.comboQuantities,
-        acceptedTerms: state.acceptedTerms,
-        confirmedAgeEligibility: state.confirmedAgeEligibility,
-        ticket: state.ticket,
-      }),
-    },
-  ),
-);
+const initialBookingDraft: BookingDraft = { movieId: null, showtimeId: null, seatIds: [], comboQuantities: {}, acceptedTerms: false, confirmedAgeEligibility: false };
+export const useBookingStore = create<BookingStore>()(persist((set) => ({
+  ...initialBookingDraft,
+  tickets: [],
+  selectMovie: (movieId) => set({ ...initialBookingDraft, movieId }),
+  selectShowtime: (showtimeId) => set({ showtimeId, seatIds: [], comboQuantities: {}, acceptedTerms: false, confirmedAgeEligibility: false }),
+  toggleSeat: (seatId) => set((state) => ({ seatIds: state.seatIds.includes(seatId) ? state.seatIds.filter((id) => id !== seatId) : [...state.seatIds, seatId] })),
+  setComboQuantity: (comboId, quantity) => set((state) => { const next = { ...state.comboQuantities }; const normalized = Math.max(0, Math.trunc(quantity)); if (normalized) next[comboId] = normalized; else delete next[comboId]; return { comboQuantities: next }; }),
+  setCheckoutConfirmation: (field, value) => set({ [field]: value }),
+  issueTicket: (ticket) => set((state) => ({ tickets: [ticket, ...state.tickets] })),
+  markTicket: (ticketId, status) => set((state) => ({ tickets: state.tickets.map((ticket) => ticket.id === ticketId ? { ...ticket, status } : ticket) })),
+  clearBooking: () => set(initialBookingDraft),
+}), { name: "cineverse.booking-draft.v2", storage: createJSONStorage(() => sessionStorage), partialize: (state) => ({ ...initialBookingDraft, movieId: state.movieId, showtimeId: state.showtimeId, seatIds: state.seatIds, comboQuantities: state.comboQuantities, acceptedTerms: state.acceptedTerms, confirmedAgeEligibility: state.confirmedAgeEligibility, tickets: state.tickets }) }));
