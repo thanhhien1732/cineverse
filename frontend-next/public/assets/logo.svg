@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 322 72" role="img" aria-labelledby="title">
+  <title id="title">CINEVERSE</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8bd5ff"/>
+      <stop offset=".45" stop-color="#5f7cff"/>
+      <stop offset="1" stop-color="#d85dff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="35" cy="36" r="22" fill="none" stroke="url(#g)" stroke-width="2.6"/>
+  <path d="M12 36h46M20 24c8 5 22 5 30 0M20 48c8-5 22-5 30 0M35 14c-7 8-7 36 0 44M35 14c7 8 7 36 0 44" fill="none" stroke="url(#g)" stroke-width="1.3" opacity=".9"/>
+  <path d="M58 29l10 7-10 7z" fill="#fff"/>
+  <text x="80" y="43" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="27" letter-spacing="4.5">CINEVERSE</text>
+</svg>

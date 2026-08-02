@@ -1,47 +1,10 @@
 "use client";
-
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { SearchIcon, TicketIcon, UserRoundIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-
+import { MenuIcon, SearchIcon, TicketIcon, UserRoundIcon, XIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-export function SiteHeader() {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = query.trim();
-    router.push(value ? `/movies?q=${encodeURIComponent(value)}` : "/movies");
-  }
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/88 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-18 w-full max-w-[85rem] items-center gap-4 px-page py-3">
-        <Link className="shrink-0 text-lg font-black tracking-[-0.08em] text-foreground" href="/">
-          CINE<span className="text-primary">VERSE</span>
-        </Link>
-        <nav aria-label="Điều hướng chính" className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
-          <Link className="transition-colors hover:text-foreground" href="/">Trang chủ</Link>
-          <Link className="transition-colors hover:text-foreground" href="/movies">Phim</Link>
-          <Link className="transition-colors hover:text-foreground" href="/tickets">Vé của tôi</Link>
-        </nav>
-        <form className="ml-auto hidden max-w-xs flex-1 md:block" onSubmit={submitSearch}>
-          <label className="sr-only" htmlFor="site-search">Tìm phim</label>
-          <div className="relative">
-            <SearchIcon aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input id="site-search" value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Tìm phim" />
-          </div>
-        </form>
-        <Button className="shrink-0" size="sm" variant="outline" aria-label="Xem vé của tôi">
-          <TicketIcon data-icon="inline-start" />
-          <span className="hidden sm:inline">Vé của tôi</span>
-        </Button>
-        <Link href="/auth" className="text-sm font-medium text-muted-foreground hover:text-foreground"><UserRoundIcon aria-hidden className="size-4" /><span className="sr-only">Tài khoản</span></Link>
-      </div>
-    </header>
-  );
-}
+import { useBookingStore } from "@/lib/stores/booking.store";
+export function SiteHeader() { const router = useRouter(); const pathname = usePathname(); const [query, setQuery] = useState(""); const [open, setOpen] = useState(false); const booking = useBookingStore((state) => state); const destination = booking.showtimeId ? booking.seatIds.length ? "/booking/combos" : `/booking/${booking.showtimeId}/seats` : booking.tickets.length ? "/tickets" : "/showtimes"; const items = [["Trang chủ", "/"], ["Phim", "/movies"], ["Đang chiếu", "/movies?status=now-showing"], ["Sắp chiếu", "/movies?status=coming-soon"]] as const; const active = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href.split("?")[0]); const search = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.push(query.trim() ? `/movies?q=${encodeURIComponent(query.trim())}` : "/movies"); setOpen(false); }; return <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl"><div className="mx-auto flex min-h-[78px] w-full max-w-[85rem] items-center gap-4 px-page py-3"><Link className="shrink-0" href="/" aria-label="CINEVERSE home"><Image alt="CINEVERSE" height={28} width={154} src="/assets/logo.svg" priority /></Link><nav className="hidden items-center gap-5 text-sm text-muted-foreground lg:flex">{items.map(([label, href]) => <Link key={href} className={active(href) ? "font-semibold text-foreground" : "hover:text-foreground"} href={href}>{label}</Link>)}</nav><form className="ml-auto hidden max-w-xs flex-1 md:block" onSubmit={search}><label className="sr-only" htmlFor="site-search">Tìm phim</label><div className="relative"><SearchIcon aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input id="site-search" value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Tìm phim" /></div></form><Link href={destination} className="relative"><Button size="sm" variant="outline"><TicketIcon data-icon="inline-start" /><span className="hidden sm:inline">{booking.showtimeId ? "Tiếp tục đặt vé" : "Vé của tôi"}</span></Button>{(booking.seatIds.length || booking.tickets.length) ? <b className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{booking.seatIds.length || booking.tickets.length}</b> : null}</Link><Link href="/auth" aria-label="Tài khoản"><UserRoundIcon className="size-5 text-muted-foreground hover:text-foreground" /></Link><Button className="lg:hidden" variant="ghost" size="icon-sm" aria-label={open ? "Đóng menu" : "Mở menu"} onClick={() => setOpen(!open)}>{open ? <XIcon /> : <MenuIcon />}</Button></div>{open ? <div className="border-t border-border bg-surface px-page py-4 lg:hidden"><form className="mb-4" onSubmit={search}><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm phim" /></form><nav className="grid gap-3 text-sm">{items.map(([label, href]) => <Link key={href} onClick={() => setOpen(false)} href={href}>{label}</Link>)}<Link onClick={() => setOpen(false)} href="/auth">Đăng nhập / Đăng ký</Link><Link onClick={() => setOpen(false)} href={destination}>Tiếp tục đặt vé</Link></nav></div> : null}</header>; }
