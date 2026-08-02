@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { SearchIcon, TicketIcon } from "lucide-react";
+import { SearchIcon, TicketIcon, UserRoundIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function SiteHeader() {
           <TicketIcon data-icon="inline-start" />
           <span className="hidden sm:inline">Vé của tôi</span>
         </Button>
+        <Link href="/auth" className="text-sm font-medium text-muted-foreground hover:text-foreground"><UserRoundIcon aria-hidden className="size-4" /><span className="sr-only">Tài khoản</span></Link>
       </div>
     </header>
   );
