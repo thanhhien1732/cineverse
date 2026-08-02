@@ -8,7 +8,12 @@ export interface Movie {
   readonly durationMinutes: number;
   readonly ratingLabel: string;
   readonly genres: readonly string[];
+  readonly formats: readonly string[];
+  readonly tagline: string;
+  readonly description: string;
   readonly posterPath: string;
+  readonly backdropPath: string;
+  readonly trailerPath?: string;
 }
 
 export interface Cinema {
