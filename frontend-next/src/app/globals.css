@@ -21,3 +21,8 @@
     font-family: var(--font-sans);
   }
 }
+
+@keyframes hero-scale {
+  from { transform: scale(1.03); }
+  to { transform: scale(1); }
+}

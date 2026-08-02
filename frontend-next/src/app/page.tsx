@@ -1,20 +1,20 @@
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRightIcon, CalendarDaysIcon } from "lucide-react";
 
 import { MovieCard } from "@/components/movies/movie-card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { mockCatalogueRepository } from "@/services/mock-repositories";
+import { HeroSwitcher } from "@/components/movies/hero-switcher";
 
 export default async function HomePage() {
   const movies = await mockCatalogueRepository.findAllMovies();
   const nowShowing = movies.filter((movie) => movie.status === "now-showing");
   const comingSoon = movies.filter((movie) => movie.status === "coming-soon");
-  const featuredMovie = nowShowing[0];
 
   return (
     <>
+      <HeroSwitcher movies={movies.filter((movie) => movie.status === "now-showing")} />
+      {/*
       <section className="relative isolate overflow-hidden border-b border-border">
         <Image alt="" aria-hidden className="-z-20 object-cover opacity-45" fill priority sizes="100vw" src={featuredMovie.backdropPath} />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,var(--background)_5%,rgb(5_7_13/72%)_47%,rgb(5_7_13/18%)_100%)]" />
@@ -30,7 +30,7 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
       <section className="mx-auto w-full max-w-[85rem] px-page py-section">
         <SectionHeading eyebrow="NOW SHOWING" title="Đang chiếu tại Cineverse" href="/movies?status=now-showing" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{nowShowing.map((movie) => <MovieCard key={movie.id} movie={movie} />)}</div>
