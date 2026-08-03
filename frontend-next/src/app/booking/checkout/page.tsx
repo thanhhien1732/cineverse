@@ -1,4 +1,4 @@
-import { Checkout } from "@/components/booking/booking-flow";
+import { CheckoutForm } from "@/components/booking/checkout-form";
 import {
   mockCatalogueRepository,
   mockComboRepository,
@@ -20,7 +20,7 @@ export default async function Page() {
     <section className="mx-auto max-w-[85rem] px-page py-section">
       <h1 className="text-4xl font-black">Xác nhận đặt vé</h1>
       <div className="mt-8">
-        <Checkout movies={movies} showtimes={showtimes} combos={combos} />
+        <CheckoutForm movies={movies} showtimes={showtimes} combos={combos} />
       </div>
     </section>
   );
