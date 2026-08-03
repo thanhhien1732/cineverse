@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
@@ -54,29 +53,20 @@ export function HeroSwitcher({
         } as CSSProperties
       }
     >
-      <Image
-        alt=""
+      <video
         aria-hidden="true"
-        className="home-hero-image"
-        fill
-        priority
-        sizes="100vw"
-        src={movie.backdropPath}
-      />
-      {movie.trailerPath ? (
-        <video
-          aria-hidden="true"
-          autoPlay
-          className="home-hero-video"
-          loop
-          muted
-          playsInline
-          poster={movie.backdropPath}
-        >
+        autoPlay
+        className="hero-bg-video home-hero-video"
+        loop
+        muted
+        playsInline
+        poster={movie.backdropPath}
+      >
+        {movie.trailerPath ? (
           <source src={movie.trailerPath} type="video/webm" />
-        </video>
-      ) : null}
-      <div className="home-hero-vignette" />
+        ) : null}
+      </video>
+      <div className="hero-vignette home-hero-vignette" />
       <div className="home-container home-hero-content">
         <p className="home-hero-kicker">
           {movie.status === "now-showing"
@@ -130,7 +120,7 @@ export function HeroSwitcher({
             </Button>
           </div>
         </div>
-        <div className="home-hero-tabs">
+        <div className="home-hero-tabs grid grid-cols-5">
           {items.map((item, index) => (
             <button
               className={index === activeIndex ? "is-active" : undefined}

@@ -23,7 +23,12 @@ export function TrailerDialog({
     <Dialog>
       <DialogTrigger
         render={
-          <Button className={triggerClassName} size="lg" variant="outline" />
+          <Button
+            className={triggerClassName}
+            size="lg"
+            type="button"
+            variant="outline"
+          />
         }
       >
         <PlayIcon data-icon="inline-start" />
