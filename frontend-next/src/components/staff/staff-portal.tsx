@@ -578,7 +578,7 @@ export function TicketVerifier() {
     <GateShell>
       <section className="verify-page">
         <header className="verify-hero">
-          <div className="mx-auto w-full max-w-[85rem] px-page">
+          <div className="mx-auto w-full max-w-340 px-page">
             <p className="eyebrow">GATE CONTROL</p>
             <h1>Kiểm soát vé</h1>
             <p>
@@ -587,7 +587,7 @@ export function TicketVerifier() {
             </p>
           </div>
         </header>
-        <section className="verify-section mx-auto w-full max-w-[85rem] px-page py-7">
+        <section className="verify-section mx-auto w-full max-w-340 px-page py-7">
           <div className="verify-layout">
             <article className="verify-scanner-card">
               <header className="verify-card-heading">
@@ -646,10 +646,10 @@ export function TicketVerifier() {
               <p
                 aria-live="polite"
                 className={`scanner-status${scannerState === "valid"
-                    ? " is-success"
-                    : scannerState === "used" || scannerState === "invalid"
-                      ? " is-error"
-                      : ""
+                  ? " is-success"
+                  : scannerState === "used" || scannerState === "invalid"
+                    ? " is-error"
+                    : ""
                   }`}
               >
                 {status}
