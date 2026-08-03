@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cổng kiểm soát và xác minh mã QR vé điện tử CINEVERSE.">
+  <title>Kiểm soát vé | CINEVERSE</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="staff-body">
+  <header class="gate-header">
+    <div class="container gate-header-inner">
+      <a class="gate-brand" href="index.html" aria-label="CINEVERSE"><img src="assets/logo.svg" alt="CINEVERSE"></a>
+      <div class="gate-header-tools">
+        <div class="gate-operator">
+          <span class="gate-operator-avatar" data-gate-operator-avatar aria-hidden="true">CV</span>
+          <span class="gate-operator-copy"><strong data-gate-operator></strong><small>Gate Control</small></span>
+        </div>
+        <button class="btn btn-ghost btn-small gate-logout" type="button" data-gate-logout>Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+  <main class="verify-page">
+    <section class="verify-hero">
+      <div class="container">
+        <p class="eyebrow">CINEVERSE GATE CONTROL</p>
+        <h1>Kiểm soát vé</h1>
+        <p>Quét mã QR hoặc nhập mã vé để xác minh trước khi khách vào rạp.</p>
+      </div>
+    </section>
+    <section class="section verify-section" data-verify-section>
+      <div class="container gate-system-alert" data-scanner-support hidden>
+        <div class="secure-context-note" data-secure-context-note></div>
+      </div>
+      <div class="container verify-layout" data-verify-layout>
+        <aside class="verify-scanner-card" data-scanner-card>
+          <div class="verify-card-heading"><span data-verify-icon></span><div><h2>Quét mã QR</h2><p>Căn mã QR vào giữa khung hình hoặc tải ảnh vé.</p></div></div>
+          <div class="scanner-viewport" data-scanner-viewport>
+            <video data-scanner-video playsinline muted></video>
+            <div class="scanner-placeholder"><span></span><strong>Sẵn sàng quét vé</strong><small>Nhấn “Bắt đầu quét” để mở camera.</small></div>
+            <i class="scanner-line"></i>
+          </div>
+          <div class="scanner-actions">
+            <button class="btn btn-primary scanner-primary-action" type="button" data-start-camera>Bắt đầu quét</button>
+            <button class="btn btn-ghost" type="button" data-stop-camera>Dừng camera</button>
+            <label class="btn btn-ghost" for="qr-image-upload">Tải ảnh QR<input id="qr-image-upload" type="file" accept="image/*" data-qr-upload hidden></label>
+          </div>
+          <p class="scanner-status" data-scanner-status hidden></p>
+          <details class="verify-manual-disclosure">
+            <summary>Nhập mã vé thủ công</summary>
+            <form class="verify-manual-form" data-verify-form>
+              <label class="field"><span>Mã vé</span><input type="text" name="ticketCode" placeholder="CV-XXXXXXXX" autocomplete="off" required></label>
+              <button class="btn btn-primary btn-block" type="submit">Kiểm tra vé</button>
+            </form>
+          </details>
+        </aside>
+        <section class="verify-result" data-verify-result>
+          <div class="verify-empty"><span data-verify-empty-icon></span><h2>Sẵn sàng kiểm soát vé</h2><p>Thông tin vé sẽ hiển thị sau khi xác minh.</p></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="js/sync-bootstrap.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/staff.js"></script>
+  <script src="js/verify.js"></script>
+</body>
+</html>
