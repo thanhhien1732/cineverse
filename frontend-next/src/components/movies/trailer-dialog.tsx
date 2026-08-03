@@ -12,10 +12,20 @@ import {
 } from "@/components/ui/dialog";
 import type { Movie } from "@/types/domain";
 
-export function TrailerDialog({ movie }: { movie: Movie }) {
+export function TrailerDialog({
+  movie,
+  triggerClassName,
+}: {
+  readonly movie: Movie;
+  readonly triggerClassName?: string;
+}) {
   return (
     <Dialog>
-      <DialogTrigger render={<Button size="lg" variant="outline" />}>
+      <DialogTrigger
+        render={
+          <Button className={triggerClassName} size="lg" variant="outline" />
+        }
+      >
         <PlayIcon data-icon="inline-start" />
         Xem trailer
       </DialogTrigger>

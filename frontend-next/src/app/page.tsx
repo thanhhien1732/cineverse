@@ -1,114 +1,137 @@
 import Link from "next/link";
-
-import { MovieCard } from "@/components/movies/movie-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { mockCatalogueRepository } from "@/services/mock-repositories";
+import { ArrowRightIcon } from "lucide-react";
+import { HomeMovieCard } from "@/components/movies/home-movie-card";
 import { HeroSwitcher } from "@/components/movies/hero-switcher";
+import { NewsletterSignup } from "@/components/movies/newsletter-signup";
+import { mockCatalogueRepository } from "@/services/mock-repositories";
+
+const experienceItems = [
+  {
+    code: "IMAX",
+    number: "01",
+    title: "Khung hình cực đại",
+    description: "Không gian màn ảnh mở rộng cho từng chi tiết điện ảnh.",
+  },
+  {
+    code: "4DX",
+    number: "02",
+    title: "Chuyển động đa giác quan",
+    description: "Hiệu ứng ghế, gió và rung chuyển đồng bộ với cảnh phim.",
+  },
+  {
+    code: "ATMOS",
+    number: "03",
+    title: "Âm thanh vòm sống động",
+    description: "Từng chuyển động âm thanh được định vị quanh khán phòng.",
+  },
+] as const;
 
 export default async function HomePage() {
   const movies = await mockCatalogueRepository.findAllMovies();
   const nowShowing = movies.filter((movie) => movie.status === "now-showing");
   const comingSoon = movies.filter((movie) => movie.status === "coming-soon");
+  const heroMovieIds = [
+    "minions-monsters",
+    "super-mario-galaxy",
+    "disclosure-day",
+    "the-odyssey",
+    "forgotten-island",
+  ];
+  const featuredMovies = heroMovieIds.flatMap((id) => {
+    const movie = movies.find((item) => item.id === id);
+
+    return movie ? [movie] : [];
+  });
 
   return (
     <>
-      <HeroSwitcher
-        movies={movies.filter((movie) => movie.status === "now-showing")}
-      />
+      <HeroSwitcher movies={featuredMovies} />
 
-      <section className="mx-auto w-full max-w-340 px-page py-section">
-        <SectionHeading
-          eyebrow="NOW SHOWING"
-          title="Đang chiếu tại Cineverse"
-          href="/movies?status=now-showing"
-        />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {nowShowing.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
-          ))}
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-surface/70">
-        <div className="mx-auto w-full max-w-340 px-page py-section">
+      <section className="home-section" id="now-showing">
+        <div className="home-container">
           <SectionHeading
-            eyebrow="COMING SOON"
-            title="Sắp ra mắt"
-            href="/movies?status=coming-soon"
+            description="Những bộ phim nổi bật hiện có tại hệ thống rạp CINEVERSE."
+            eyebrow="MÀN ẢNH LỚN"
+            href="/movies?status=now-showing"
+            linkLabel="Xem tất cả"
+            title="Phim đang chiếu"
           />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {comingSoon.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+          <div className="home-movie-grid">
+            {nowShowing.slice(0, 4).map((movie) => (
+              <HomeMovieCard key={movie.id} movie={movie} />
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-340 px-page py-section">
-        <div
-          className="relative overflow-hidden rounded-2xl border border-primary/35 bg-surface px-6 py-12 sm:px-12"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, rgb(12 17 29 / 95%), rgb(12 17 29 / 65%)), url('/assets/media/static/newsletter-bg.webp')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="flex max-w-xl flex-col gap-5">
-            <p className="text-xs font-bold tracking-[0.24em] text-primary-bright">
-              CINEVERSE LETTER
-            </p>
-            <h2 className="text-3xl font-black tracking-[-0.06em] sm:text-5xl">
-              Biết trước suất chiếu đáng chờ.
-            </h2>
-            <p className="text-foreground-muted">
-              Một email mỗi tuần về phim mới, suất đặc biệt và những đêm chiếu
-              không nên bỏ lỡ.
-            </p>
-            <form className="flex flex-col gap-3 sm:flex-row">
-              <label className="sr-only" htmlFor="newsletter-email">
-                Email
-              </label>
-              <Input
-                id="newsletter-email"
-                type="email"
-                placeholder="email@cuaban.com"
-              />
-              <Button type="submit">Đăng ký</Button>
-            </form>
+      <section className="home-section home-section-dark" id="coming-soon">
+        <div className="home-container">
+          <SectionHeading
+            description="Khám phá trước các tác phẩm đang chờ ngày công chiếu."
+            eyebrow="SẮP RA MẮT"
+            href="/movies?status=coming-soon"
+            linkLabel="Xem lịch chiếu"
+            title="Phim sắp chiếu"
+          />
+          <div className="home-movie-grid">
+            {comingSoon.slice(0, 4).map((movie) => (
+              <HomeMovieCard compact key={movie.id} movie={movie} />
+            ))}
           </div>
         </div>
       </section>
+
+      <section className="experience-section home-section" id="experience">
+        <div className="home-container">
+          <SectionHeading
+            description="Định dạng trình chiếu hiện đại biến mỗi suất chiếu thành một hành trình đa giác quan."
+            eyebrow="TRẢI NGHIỆM CINEVERSE"
+            title="Không chỉ là một bộ phim"
+          />
+          <div className="experience-grid">
+            {experienceItems.map((item) => (
+              <article className="experience-card" key={item.code}>
+                <span>{item.number}</span>
+                <h3>{item.code}</h3>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <NewsletterSignup />
     </>
   );
 }
 
 function SectionHeading({
+  description,
   eyebrow,
   href,
+  linkLabel,
   title,
 }: {
-  eyebrow: string;
-  href: string;
-  title: string;
+  readonly description: string;
+  readonly eyebrow: string;
+  readonly href?: string;
+  readonly linkLabel?: string;
+  readonly title: string;
 }) {
   return (
-    <div className="mb-8 flex items-end justify-between gap-5">
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-bold tracking-[0.22em] text-primary-bright">
-          {eyebrow}
-        </p>
-        <h2 className="text-3xl font-black tracking-[-0.06em] sm:text-4xl">
-          {title}
-        </h2>
+    <div className="home-section-head">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2>{title}</h2>
+        <p>{description}</p>
       </div>
-      <Link
-        className="hidden text-sm font-semibold text-primary-bright hover:text-foreground sm:block"
-        href={href}
-      >
-        Xem tất cả →
-      </Link>
+      {href && linkLabel ? (
+        <Link className="home-text-link" href={href}>
+          {linkLabel}
+          <ArrowRightIcon aria-hidden="true" />
+        </Link>
+      ) : null}
     </div>
   );
 }

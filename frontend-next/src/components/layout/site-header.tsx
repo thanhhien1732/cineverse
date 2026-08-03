@@ -2,19 +2,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { MenuIcon, SearchIcon, TicketIcon, UserRoundIcon, XIcon } from "lucide-react";
+import {
+  MenuIcon,
+  SearchIcon,
+  TicketIcon,
+  UserRoundIcon,
+  XIcon,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBookingStore } from "@/lib/stores/booking.store";
-
 export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const booking = useBookingStore((state) => state);
-
   const destination = booking.showtimeId
     ? booking.seatIds.length
       ? "/booking/combos"
@@ -22,17 +26,14 @@ export function SiteHeader() {
     : booking.tickets.length
       ? "/tickets"
       : "/showtimes";
-
   const items = [
     ["Trang chủ", "/"],
     ["Phim", "/movies"],
     ["Đang chiếu", "/movies?status=now-showing"],
     ["Sắp chiếu", "/movies?status=coming-soon"],
   ] as const;
-
   const active = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href.split("?")[0]);
-
   const search = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     router.push(
@@ -42,10 +43,9 @@ export function SiteHeader() {
     );
     setOpen(false);
   };
-
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-19.5 w-full max-w-340 items-center gap-4 px-page py-3">
+    <header className="site-header sticky top-0 z-40">
+      <div className="site-header-inner mx-auto flex w-full max-w-[85rem] items-center gap-4 px-page">
         <Link className="shrink-0" href="/" aria-label="CINEVERSE home">
           <Image
             alt="CINEVERSE"
@@ -55,8 +55,7 @@ export function SiteHeader() {
             priority
           />
         </Link>
-
-        <nav className="hidden items-center gap-5 text-sm text-muted-foreground lg:flex">
+        <nav className="site-desktop-nav hidden items-center lg:flex">
           {items.map(([label, href]) => (
             <Link
               key={href}
@@ -71,9 +70,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-
         <form
-          className="ml-auto hidden max-w-xs flex-1 md:block"
+          className="site-search ml-auto hidden max-w-xs flex-1 md:block"
           onSubmit={search}
         >
           <label className="sr-only" htmlFor="site-search">
@@ -93,8 +91,7 @@ export function SiteHeader() {
             />
           </div>
         </form>
-
-        <Link href={destination} className="relative">
+        <Link className="site-ticket-link relative" href={destination}>
           <Button size="sm" variant="outline">
             <TicketIcon data-icon="inline-start" />
             <span className="hidden sm:inline">
@@ -107,11 +104,9 @@ export function SiteHeader() {
             </b>
           ) : null}
         </Link>
-
-        <Link href="/auth" aria-label="Tài khoản">
-          <UserRoundIcon className="size-5 text-muted-foreground hover:text-foreground" />
+        <Link className="site-account-link" href="/auth" aria-label="Tài khoản">
+          <UserRoundIcon className="size-5" />
         </Link>
-
         <Button
           className="lg:hidden"
           variant="ghost"
@@ -122,9 +117,8 @@ export function SiteHeader() {
           {open ? <XIcon /> : <MenuIcon />}
         </Button>
       </div>
-
       {open ? (
-        <div className="border-t border-border bg-surface px-page py-4 lg:hidden">
+        <div className="site-mobile-panel border-t px-page py-4 lg:hidden">
           <form className="mb-4" onSubmit={search}>
             <Input
               value={query}
@@ -132,18 +126,15 @@ export function SiteHeader() {
               placeholder="Tìm phim"
             />
           </form>
-
-          <nav className="grid gap-3 text-sm">
+          <nav className="site-mobile-nav grid gap-3 text-sm">
             {items.map(([label, href]) => (
               <Link key={href} onClick={() => setOpen(false)} href={href}>
                 {label}
               </Link>
             ))}
-
             <Link onClick={() => setOpen(false)} href="/auth">
               Đăng nhập / Đăng ký
             </Link>
-
             <Link onClick={() => setOpen(false)} href={destination}>
               Tiếp tục đặt vé
             </Link>
