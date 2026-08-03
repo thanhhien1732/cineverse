@@ -1,0 +1,36 @@
+import { ShowtimePicker } from "@/components/booking/booking-flow";
+import {
+  mockCatalogueRepository,
+  mockComboRepository,
+  mockShowtimeRepository,
+} from "@/services/mock-repositories";
+export default async function Page() {
+  const [movies, cinemas, combos] = await Promise.all([
+    mockCatalogueRepository.findAllMovies(),
+    mockShowtimeRepository.findCinemas(),
+    mockComboRepository.findAllCombos(),
+  ]);
+  const showtimes = (
+    await Promise.all(
+      movies.map((movie) =>
+        mockShowtimeRepository.findShowtimesByMovie(movie.id),
+      ),
+    )
+  ).flat();
+  return (
+    <section className="mx-auto max-w-340 px-page py-section">
+      <h1 className="text-4xl font-black">Chọn suất chiếu</h1>
+      <p className="mt-2 text-muted-foreground">
+        Chọn phim, ngày, rạp và khung giờ phù hợp.
+      </p>
+      <div className="mt-8">
+        <ShowtimePicker
+          movies={movies}
+          cinemas={cinemas}
+          showtimes={showtimes}
+          combos={combos}
+        />
+      </div>
+    </section>
+  );
+}
