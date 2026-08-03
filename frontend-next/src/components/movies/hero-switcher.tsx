@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
@@ -14,6 +15,18 @@ const heroAccents: Readonly<Record<string, string>> = {
   "the-odyssey": "#e59a5b",
   "forgotten-island": "#76bc9c",
 };
+
+function getHeroTitleClass(title: string) {
+  if (title.length >= 26) {
+    return "is-extra-long";
+  }
+
+  if (title.length >= 17) {
+    return "is-long";
+  }
+
+  return undefined;
+}
 
 export function HeroSwitcher({
   movies,
@@ -53,19 +66,16 @@ export function HeroSwitcher({
         } as CSSProperties
       }
     >
-      <video
+      <Image
         aria-hidden="true"
-        autoPlay
-        className="hero-bg-video home-hero-video"
-        loop
-        muted
-        playsInline
-        poster={movie.backdropPath}
-      >
-        {movie.trailerPath ? (
-          <source src={movie.trailerPath} type="video/webm" />
-        ) : null}
-      </video>
+        alt=""
+        className="home-hero-image"
+        fill
+        key={movie.id}
+        priority
+        sizes="100vw"
+        src={movie.backdropPath}
+      />
       <div className="hero-vignette home-hero-vignette" />
       <div className="home-container home-hero-content">
         <p className="home-hero-kicker">
@@ -73,13 +83,8 @@ export function HeroSwitcher({
             ? "ĐANG CHIẾU TẠI CINEVERSE"
             : "SẮP CHIẾU TẠI CINEVERSE"}
         </p>
-        <h1>{movie.title}</h1>
+        <h1 className={getHeroTitleClass(movie.title)}>{movie.title}</h1>
         <p className="home-hero-tagline">{movie.tagline}</p>
-        <div className="home-hero-meta">
-          <span>{movie.ratingLabel}</span>
-          <span>{movie.durationMinutes} phút</span>
-          <span>{movie.formats.join(" · ")}</span>
-        </div>
         <div className="home-hero-actions">
           {movie.status === "now-showing" ? (
             <Link

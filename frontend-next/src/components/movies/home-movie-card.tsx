@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRightIcon, ClockIcon, PlayIcon } from "lucide-react";
+import { ArrowRightIcon, ClockIcon } from "lucide-react";
 import type { Movie } from "@/types/domain";
 
 export function HomeMovieCard({
@@ -24,11 +24,6 @@ export function HomeMovieCard({
           src={movie.posterPath}
         />
         <span className="home-movie-rating">{movie.ratingLabel}</span>
-        <span className="home-movie-overlay" aria-hidden="true">
-          <span>
-            <PlayIcon className="size-[1.125rem] fill-current" />
-          </span>
-        </span>
       </Link>
       <div className="home-movie-card-body">
         <p className="eyebrow">{movie.genres.join(" · ")}</p>
@@ -40,7 +35,7 @@ export function HomeMovieCard({
             <ClockIcon aria-hidden="true" className="size-[0.9375rem]" />
             {movie.durationMinutes} phút
           </span>
-          <span>{movie.formats.join(" · ")}</span>
+          <span>{movie.releaseLabel}</span>
         </div>
         <div className="home-card-actions">
           <Link className="home-text-link" href={`/movies/${movie.id}`}>

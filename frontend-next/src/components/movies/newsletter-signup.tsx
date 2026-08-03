@@ -1,16 +1,14 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { useFeedback } from "@/components/feedback/feedback-provider";
 
 export function NewsletterSignup() {
-  const { notify } = useFeedback();
   const [email, setEmail] = useState("");
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setEmail("");
-    notify("Đăng ký nhận tin thành công.");
+    window.alert("Đăng ký nhận tin thành công.");
   }
 
   return (

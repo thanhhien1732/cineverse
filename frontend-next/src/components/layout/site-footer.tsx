@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 export function SiteFooter() {
   return (
-    <footer className="site-footer px-page">
-      <div className="site-footer-grid mx-auto grid w-full max-w-340 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="site-footer">
+      <div className="home-container site-footer-grid grid sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Image
             alt="CINEVERSE"
@@ -29,18 +29,24 @@ export function SiteFooter() {
           title="Hỗ trợ"
           links={[
             ["Đặt vé", "/showtimes"],
-            ["Vé của tôi", "/tickets"],
+            ["Vé của bạn", "/tickets"],
+            ["Vé gần nhất", "/tickets"],
             ["Tài khoản", "/auth"],
           ]}
         />
         <div>
           <h2 className="font-semibold">Kết nối</h2>
           <p>Hotline: 1900 2026</p>
-          <p>hello@cineverse.vn</p>
-          <p className="site-social-row">f · ▶ · ◎ · ♪</p>
+          <p>Email: hello@cineverse.vn</p>
+          <div className="site-social-row" aria-label="Mạng xã hội Cineverse">
+            <span>f</span>
+            <span>▶</span>
+            <span>◎</span>
+            <span>♪</span>
+          </div>
         </div>
       </div>
-      <div className="site-footer-bottom mx-auto flex w-full max-w-340 flex-wrap justify-between gap-3">
+      <div className="home-container site-footer-bottom flex flex-wrap justify-between gap-3">
         <span>© 2026 CINEVERSE. All rights reserved.</span>
         <span>Điều khoản sử dụng · Chính sách bảo mật</span>
       </div>
@@ -59,7 +65,11 @@ function FooterGroup({
       <h2>{title}</h2>
       <div className="site-footer-links grid">
         {links.map(([label, href]) => (
-          <Link key={href} href={href} className="hover:text-foreground">
+          <Link
+            key={`${href}-${label}`}
+            href={href}
+            className="hover:text-foreground"
+          >
             {label}
           </Link>
         ))}

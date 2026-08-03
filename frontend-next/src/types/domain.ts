@@ -6,6 +6,7 @@ export interface Movie {
   readonly title: string;
   readonly status: MovieStatus;
   readonly durationMinutes: number;
+  readonly releaseLabel: string;
   readonly ratingLabel: string;
   readonly genres: readonly string[];
   readonly formats: readonly string[];
