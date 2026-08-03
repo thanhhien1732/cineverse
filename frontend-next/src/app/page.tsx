@@ -16,24 +16,8 @@ export default async function HomePage() {
       <HeroSwitcher
         movies={movies.filter((movie) => movie.status === "now-showing")}
       />
-      {/*
-      <section className="relative isolate overflow-hidden border-b border-border">
-        <Image alt="" aria-hidden className="-z-20 object-cover opacity-45" fill priority sizes="100vw" src={featuredMovie.backdropPath} />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,var(--background)_5%,rgb(5_7_13/72%)_47%,rgb(5_7_13/18%)_100%)]" />
-        <div className="mx-auto flex min-h-[34rem] w-full max-w-[85rem] items-end px-page py-section md:items-center">
-          <div className="flex max-w-2xl flex-col gap-6">
-            <p className="text-xs font-bold tracking-[0.24em] text-primary-bright">FEATURED PRESENTATION</p>
-            <h1 className="max-w-xl text-5xl font-black leading-[0.88] tracking-[-0.08em] text-balance sm:text-7xl">{featuredMovie.title}</h1>
-            <p className="max-w-lg text-lg leading-8 text-foreground-muted">{featuredMovie.tagline}</p>
-            <div className="flex flex-wrap gap-3 text-sm text-foreground-muted"><span>{featuredMovie.ratingLabel}</span><span>·</span><span>{featuredMovie.durationMinutes} phút</span><span>·</span><span>{featuredMovie.formats.join(" · ")}</span></div>
-            <div className="flex flex-wrap gap-3">
-              <Link href={`/movies/${featuredMovie.id}`} className={buttonVariants({ size: "lg" })}>Khám phá phim <ArrowRightIcon data-icon="inline-end" /></Link>
-              <Link href="/movies" className={buttonVariants({ variant: "outline", size: "lg" })}><CalendarDaysIcon data-icon="inline-start" />Xem lịch phim</Link>
-            </div>
-          </div>
-        </div>
-      </section> */}
-      <section className="mx-auto w-full max-w-[85rem] px-page py-section">
+
+      <section className="mx-auto w-full max-w-340 px-page py-section">
         <SectionHeading
           eyebrow="NOW SHOWING"
           title="Đang chiếu tại Cineverse"
@@ -45,8 +29,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
       <section className="border-y border-border bg-surface/70">
-        <div className="mx-auto w-full max-w-[85rem] px-page py-section">
+        <div className="mx-auto w-full max-w-340 px-page py-section">
           <SectionHeading
             eyebrow="COMING SOON"
             title="Sắp ra mắt"
@@ -59,7 +44,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-      <section className="mx-auto w-full max-w-[85rem] px-page py-section">
+
+      <section className="mx-auto w-full max-w-340 px-page py-section">
         <div
           className="relative overflow-hidden rounded-2xl border border-primary/35 bg-surface px-6 py-12 sm:px-12"
           style={{

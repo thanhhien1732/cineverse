@@ -76,7 +76,7 @@ function GateShell({ children }: { readonly children: ReactNode }) {
   return (
     <main className="staff-body min-h-screen">
       <header className="gate-header">
-        <div className="gate-header-inner mx-auto w-full max-w-[85rem] px-page">
+        <div className="gate-header-inner mx-auto w-full max-w-340 px-page">
           <Link aria-label="Cineverse" className="gate-brand" href="/">
             <span className="font-black tracking-[-0.08em]">
               CINE<span className="text-primary">VERSE</span>
@@ -201,7 +201,7 @@ export function StaffAuthPortal() {
 
   return (
     <GateShell>
-      <section className="mx-auto w-full max-w-[85rem] px-page py-16">
+      <section className="mx-auto w-full max-w-340 px-page py-16">
         <div className="staff-login-card mx-auto max-w-2xl">
           <p className="eyebrow">GATE CONTROL READY</p>
           <h1 className="mt-2 text-3xl font-black tracking-[-0.055em]">
@@ -274,9 +274,8 @@ function TicketValidationResult({
           <h2>{title}</h2>
         </div>
         <b
-          className={`verification-status-badge${
-            isValid ? "" : " is-rejected"
-          }`}
+          className={`verification-status-badge${isValid ? "" : " is-rejected"
+            }`}
         >
           {isValid ? "CHỜ XÁC NHẬN" : "TỪ CHỐI"}
         </b>
@@ -646,13 +645,12 @@ export function TicketVerifier() {
               </div>
               <p
                 aria-live="polite"
-                className={`scanner-status${
-                  scannerState === "valid"
+                className={`scanner-status${scannerState === "valid"
                     ? " is-success"
                     : scannerState === "used" || scannerState === "invalid"
                       ? " is-error"
                       : ""
-                }`}
+                  }`}
               >
                 {status}
               </p>

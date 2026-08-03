@@ -28,14 +28,14 @@ export function HeroSwitcher({ movies }: { movies: readonly Movie[] }) {
         className="-z-20 object-cover animate-[hero-scale_8s_ease_both]"
       />
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(3_5_10/.95),rgb(3_5_10/.5)_49%,rgb(3_5_10/.2)),linear-gradient(0deg,rgb(3_5_10/.95),rgb(3_5_10/.06)_48%,rgb(3_5_10/.45))]" />
-      <div className="mx-auto grid min-h-[min(760px,86vh)] max-w-[85rem] content-center px-page pb-33 pt-20">
+      <div className="mx-auto grid min-h-[min(760px,86vh)] max-w-340 content-center px-page pb-33 pt-20">
         <p className="text-xs font-extrabold tracking-[.16em] text-primary-bright">
           FEATURED PRESENTATION
         </p>
-        <h1 className="mt-5 max-w-[780px] text-[clamp(3.25rem,8.8vw,8.4rem)] font-black leading-[.86] tracking-[-.1em] text-white uppercase">
+        <h1 className="mt-5 max-w-195 text-[clamp(3.25rem,8.8vw,8.4rem)] font-black leading-[.86] -tracking-widest text-white uppercase">
           {movie.title}
         </h1>
-        <p className="mt-6 max-w-[580px] text-lg text-white/88">
+        <p className="mt-6 max-w-145 text-lg text-white/88">
           {movie.tagline}
         </p>
         <p className="mt-5 text-xs font-bold tracking-[.06em] text-foreground-muted uppercase">
@@ -56,7 +56,7 @@ export function HeroSwitcher({ movies }: { movies: readonly Movie[] }) {
             Xem lịch phim
           </Link>
         </div>
-        <div className="absolute inset-x-page bottom-6 mx-auto max-w-[85rem] rounded-[14px] border border-white/13 bg-[rgb(5_8_14/.68)] p-4 backdrop-blur-xl">
+        <div className="absolute inset-x-page bottom-6 mx-auto max-w-340 rounded-[14px] border border-white/13 bg-[rgb(5_8_14/.68)] p-4 backdrop-blur-xl">
           <div className="mb-3 flex items-center justify-between text-[.68rem] font-extrabold tracking-[.16em] text-white/58">
             <span>FEATURED NOW</span>
             <div className="flex gap-2">

@@ -11,7 +11,7 @@ export function MovieCard({ movie }: { movie: Movie }) {
       className="group block focus-visible:outline-none"
     >
       <article className="overflow-hidden rounded-xl bg-card ring-1 ring-border transition duration-300 group-hover:-translate-y-1 group-hover:ring-primary/70 group-focus-visible:ring-2 group-focus-visible:ring-ring">
-        <div className="relative aspect-[2/3] overflow-hidden bg-surface-raised">
+        <div className="relative aspect-2/3 overflow-hidden bg-surface-raised">
           <Image
             alt={`Poster ${movie.title}`}
             className="object-cover transition duration-500 group-hover:scale-105"

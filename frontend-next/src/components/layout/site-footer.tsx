@@ -3,7 +3,7 @@ import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface px-page py-10">
-      <div className="mx-auto grid w-full max-w-[85rem] gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid w-full max-w-340 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Image
             alt="CINEVERSE"
@@ -16,6 +16,7 @@ export function SiteFooter() {
             CINEVERSE.
           </p>
         </div>
+
         <FooterGroup
           title="Khám phá"
           links={[
@@ -33,6 +34,7 @@ export function SiteFooter() {
             ["Tài khoản", "/auth"],
           ]}
         />
+
         <div>
           <h2 className="font-semibold">Kết nối</h2>
           <p className="mt-4 text-sm text-muted-foreground">
@@ -44,17 +46,16 @@ export function SiteFooter() {
           <p className="mt-4 text-sm text-muted-foreground">f · ▶ · ◎ · ♪</p>
         </div>
       </div>
-      <div className="mx-auto mt-8 flex w-full max-w-[85rem] flex-wrap justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
+
+      <div className="mx-auto mt-8 flex w-full max-w-340 flex-wrap justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
         <span>© 2026 CINEVERSE. All rights reserved.</span>
         <span>Điều khoản sử dụng · Chính sách bảo mật</span>
       </div>
     </footer>
   );
 }
-function FooterGroup({
-  title,
-  links,
-}: {
+
+function FooterGroup({ title, links }: {
   title: string;
   links: readonly (readonly [string, string])[];
 }) {

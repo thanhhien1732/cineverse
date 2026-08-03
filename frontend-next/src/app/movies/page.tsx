@@ -11,7 +11,7 @@ export default async function MoviesPage({
     mockCatalogueRepository.findAllMovies(),
   ]);
   return (
-    <section className="mx-auto w-full max-w-[85rem] px-page py-section">
+    <section className="mx-auto w-full max-w-340 px-page py-section">
       <div className="mb-10 flex max-w-2xl flex-col gap-3">
         <p className="text-xs font-bold tracking-[0.24em] text-primary-bright">
           MOVIE CATALOGUE

@@ -79,11 +79,13 @@ const reservedSeatIds = new Set([
   "J1-J2",
   "J9-J10",
 ]);
+
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   maximumFractionDigits: 0,
 });
+
 const days = Array.from({ length: 7 }, (_, index) => {
   const value = new Date("2026-08-03T12:00:00+07:00");
   value.setDate(value.getDate() + index);
@@ -128,46 +130,53 @@ export function BookingSummary({
   const draft = useBookingStore((state) => state);
   const movie = movies.find((item) => item.id === draft.movieId);
   const showtime = showtimes.find((item) => item.id === draft.showtimeId);
+
   const seatTotal = draft.seatIds.reduce(
     (total, id) =>
       total +
       95000 * (seatPlan.find((seat) => seat.id === id)?.priceMultiplier ?? 1),
     0,
   );
+
   const comboTotal = combos.reduce(
     (total, combo) =>
       total + combo.unitPrice * (draft.comboQuantities[combo.id] ?? 0),
     0,
   );
+
   const admissionCount = draft.seatIds.reduce(
     (total, seatId) =>
       total +
       (seatPlan.find((seat) => seat.id === seatId)?.kind === "couple" ? 2 : 1),
     0,
   );
+
   return (
     <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
       <p className="text-xs font-bold tracking-[.18em] text-primary-bright">
         TÓM TẮT ĐẶT VÉ
       </p>
+
       <div className="mt-4 grid gap-3 text-sm">
         <p className="font-semibold">{movie?.title ?? "Chưa chọn phim"}</p>
         <p className="text-muted-foreground">
           {showtime
             ? new Intl.DateTimeFormat("vi-VN", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(showtime.startsAt))
+              dateStyle: "medium",
+              timeStyle: "short",
+            }).format(new Date(showtime.startsAt))
             : "Chưa chọn suất chiếu"}
         </p>
+
         <p>
           Ghế:{" "}
           {draft.seatIds.length
             ? draft.seatIds
-                .map((id) => seatPlan.find((seat) => seat.id === id)?.label)
-                .join(", ")
+              .map((id) => seatPlan.find((seat) => seat.id === id)?.label)
+              .join(", ")
             : "Chưa chọn"}
         </p>
+
         {draft.seatIds.length > 0 && (
           <div className="selected-seat-list" aria-label="Ghế đã chọn">
             {draft.seatIds.map((seatId) => (
@@ -177,6 +186,7 @@ export function BookingSummary({
             ))}
           </div>
         )}
+
         {combos
           .filter((combo) => draft.comboQuantities[combo.id])
           .map((combo) => (
@@ -184,12 +194,14 @@ export function BookingSummary({
               {combo.name} × {draft.comboQuantities[combo.id]}
             </p>
           ))}
+
         <div className="mt-2 flex justify-between border-t pt-3 text-base font-bold">
           <span>Tổng cộng</span>
           <span>
             {money.format(seatTotal + comboTotal + admissionCount * 5000)}
           </span>
         </div>
+
         {action}
       </div>
     </aside>
@@ -210,8 +222,8 @@ export function ShowtimePicker({
   const router = useRouter();
   const [movieId, setMovieId] = useState(
     movies.find((movie) => movie.status === "now-showing")?.id ??
-      movies[0]?.id ??
-      "",
+    movies[0]?.id ??
+    "",
   );
   const [day, setDay] = useState(days[0].toDateString());
   const [pendingShowtime, setPendingShowtime] = useState<Showtime | null>(null);
@@ -384,17 +396,17 @@ export function SeatPicker({
                     isReserved && "bg-muted opacity-40",
                     isSelected && "bg-primary text-primary-foreground",
                     !isReserved &&
-                      !isSelected &&
-                      seat.kind === "vip" &&
-                      "bg-warning text-background",
+                    !isSelected &&
+                    seat.kind === "vip" &&
+                    "bg-warning text-background",
                     !isReserved &&
-                      !isSelected &&
-                      seat.kind === "couple" &&
-                      "bg-accent text-foreground",
+                    !isSelected &&
+                    seat.kind === "couple" &&
+                    "bg-accent text-foreground",
                     !isReserved &&
-                      !isSelected &&
-                      seat.kind === "standard" &&
-                      "bg-surface-raised hover:bg-primary/30",
+                    !isSelected &&
+                    seat.kind === "standard" &&
+                    "bg-surface-raised hover:bg-primary/30",
                   )}
                 >
                   {seat.label}
@@ -450,7 +462,7 @@ export function ComboPicker({
               key={combo.id}
               className="rounded-xl border border-border bg-surface p-4"
             >
-              <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-surface-raised">
+              <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-raised">
                 <Image
                   alt=""
                   fill
@@ -543,7 +555,7 @@ export function Checkout({
         (total, id) =>
           total +
           95000 *
-            (seatPlan.find((seat) => seat.id === id)?.priceMultiplier ?? 1),
+          (seatPlan.find((seat) => seat.id === id)?.priceMultiplier ?? 1),
         0,
       ) +
       combos.reduce(
