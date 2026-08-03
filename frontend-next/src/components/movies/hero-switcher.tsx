@@ -5,4 +5,93 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Movie } from "@/types/domain";
-export function HeroSwitcher({ movies }: { movies: readonly Movie[] }) { const [active, setActive] = useState(0); const items = movies.slice(0, 4); useEffect(() => { const timer = window.setInterval(() => setActive((current) => (current + 1) % items.length), 6500); return () => window.clearInterval(timer); }, [items.length]); const movie = items[active] ?? items[0]; return <section className="relative isolate min-h-[min(760px,86vh)] overflow-hidden border-b border-border"><Image alt="" aria-hidden fill priority sizes="100vw" src={movie.backdropPath} className="-z-20 object-cover animate-[hero-scale_8s_ease_both]" /><div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(3_5_10/.95),rgb(3_5_10/.5)_49%,rgb(3_5_10/.2)),linear-gradient(0deg,rgb(3_5_10/.95),rgb(3_5_10/.06)_48%,rgb(3_5_10/.45))]" /><div className="mx-auto grid min-h-[min(760px,86vh)] max-w-[85rem] content-center px-page pb-33 pt-20"><p className="text-xs font-extrabold tracking-[.16em] text-primary-bright">FEATURED PRESENTATION</p><h1 className="mt-5 max-w-[780px] text-[clamp(3.25rem,8.8vw,8.4rem)] font-black leading-[.86] tracking-[-.1em] text-white uppercase">{movie.title}</h1><p className="mt-6 max-w-[580px] text-lg text-white/88">{movie.tagline}</p><p className="mt-5 text-xs font-bold tracking-[.06em] text-foreground-muted uppercase">{movie.ratingLabel} · {movie.durationMinutes} phút · {movie.formats.join(" · ")}</p><div className="mt-7 flex gap-3"><Link className={buttonVariants({ size: "lg" })} href={`/movies/${movie.id}`}>Khám phá phim</Link><Link className={buttonVariants({ size: "lg", variant: "outline" })} href="/movies">Xem lịch phim</Link></div><div className="absolute inset-x-page bottom-6 mx-auto max-w-[85rem] rounded-[14px] border border-white/13 bg-[rgb(5_8_14/.68)] p-4 backdrop-blur-xl"><div className="mb-3 flex items-center justify-between text-[.68rem] font-extrabold tracking-[.16em] text-white/58"><span>FEATURED NOW</span><div className="flex gap-2"><Button size="icon-sm" variant="outline" onClick={() => setActive((active + items.length - 1) % items.length)}><ChevronLeftIcon /></Button><Button size="icon-sm" variant="outline" onClick={() => setActive((active + 1) % items.length)}><ChevronRightIcon /></Button></div></div><div className="grid grid-cols-4 gap-2">{items.map((item, index) => <button key={item.id} className={`relative grid gap-1 border-b-2 pb-3 text-left text-[.68rem] ${index === active ? "border-primary-bright text-white" : "border-white/13 text-white/48"}`} onClick={() => setActive(index)}><span className="tracking-[.15em]">0{index + 1}</span><strong className="truncate">{item.title}</strong></button>)}</div></div></div></section>; }
+export function HeroSwitcher({ movies }: { movies: readonly Movie[] }) {
+  const [active, setActive] = useState(0);
+  const items = movies.slice(0, 4);
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setActive((current) => (current + 1) % items.length),
+      6500,
+    );
+    return () => window.clearInterval(timer);
+  }, [items.length]);
+  const movie = items[active] ?? items[0];
+  return (
+    <section className="relative isolate min-h-[min(760px,86vh)] overflow-hidden border-b border-border">
+      <Image
+        alt=""
+        aria-hidden
+        fill
+        priority
+        sizes="100vw"
+        src={movie.backdropPath}
+        className="-z-20 object-cover animate-[hero-scale_8s_ease_both]"
+      />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(3_5_10/.95),rgb(3_5_10/.5)_49%,rgb(3_5_10/.2)),linear-gradient(0deg,rgb(3_5_10/.95),rgb(3_5_10/.06)_48%,rgb(3_5_10/.45))]" />
+      <div className="mx-auto grid min-h-[min(760px,86vh)] max-w-[85rem] content-center px-page pb-33 pt-20">
+        <p className="text-xs font-extrabold tracking-[.16em] text-primary-bright">
+          FEATURED PRESENTATION
+        </p>
+        <h1 className="mt-5 max-w-[780px] text-[clamp(3.25rem,8.8vw,8.4rem)] font-black leading-[.86] tracking-[-.1em] text-white uppercase">
+          {movie.title}
+        </h1>
+        <p className="mt-6 max-w-[580px] text-lg text-white/88">
+          {movie.tagline}
+        </p>
+        <p className="mt-5 text-xs font-bold tracking-[.06em] text-foreground-muted uppercase">
+          {movie.ratingLabel} · {movie.durationMinutes} phút ·{" "}
+          {movie.formats.join(" · ")}
+        </p>
+        <div className="mt-7 flex gap-3">
+          <Link
+            className={buttonVariants({ size: "lg" })}
+            href={`/movies/${movie.id}`}
+          >
+            Khám phá phim
+          </Link>
+          <Link
+            className={buttonVariants({ size: "lg", variant: "outline" })}
+            href="/movies"
+          >
+            Xem lịch phim
+          </Link>
+        </div>
+        <div className="absolute inset-x-page bottom-6 mx-auto max-w-[85rem] rounded-[14px] border border-white/13 bg-[rgb(5_8_14/.68)] p-4 backdrop-blur-xl">
+          <div className="mb-3 flex items-center justify-between text-[.68rem] font-extrabold tracking-[.16em] text-white/58">
+            <span>FEATURED NOW</span>
+            <div className="flex gap-2">
+              <Button
+                size="icon-sm"
+                variant="outline"
+                onClick={() =>
+                  setActive((active + items.length - 1) % items.length)
+                }
+              >
+                <ChevronLeftIcon />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="outline"
+                onClick={() => setActive((active + 1) % items.length)}
+              >
+                <ChevronRightIcon />
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {items.map((item, index) => (
+              <button
+                key={item.id}
+                className={`relative grid gap-1 border-b-2 pb-3 text-left text-[.68rem] ${index === active ? "border-primary-bright text-white" : "border-white/13 text-white/48"}`}
+                onClick={() => setActive(index)}
+              >
+                <span className="tracking-[.15em]">0{index + 1}</span>
+                <strong className="truncate">{item.title}</strong>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
