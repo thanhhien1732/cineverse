@@ -40,6 +40,12 @@
 }
 
 @layer components {
+  @media (min-width: 64rem) {
+    .booking-content-grid {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+    }
+  }
+
   .seat-context {
     display: flex;
     align-items: end;

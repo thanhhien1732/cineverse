@@ -45,7 +45,7 @@ export function SiteHeader() {
   };
   return (
     <header className="site-header sticky top-0 z-40">
-      <div className="site-header-inner mx-auto flex w-full max-w-[85rem] items-center gap-4 px-page">
+      <div className="site-header-inner mx-auto flex w-full max-w-340 items-center gap-4 px-page">
         <Link className="shrink-0" href="/" aria-label="CINEVERSE home">
           <Image
             alt="CINEVERSE"
@@ -99,7 +99,7 @@ export function SiteHeader() {
             </span>
           </Button>
           {booking.seatIds.length || booking.tickets.length ? (
-            <b className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+            <b className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
               {booking.seatIds.length || booking.tickets.length}
             </b>
           ) : null}

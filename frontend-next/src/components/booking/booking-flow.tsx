@@ -153,7 +153,7 @@ export function BookingSummary({
 
   return (
     <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
-      <p className="text-xs font-bold tracking-[.18em] text-primary-bright">
+      <p className="text-xs font-bold tracking-widest text-primary-bright">
         TÓM TẮT ĐẶT VÉ
       </p>
 
@@ -240,7 +240,7 @@ export function ShowtimePicker({
   return (
     <div>
       <BookingSteps active={1} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="booking-content-grid grid gap-6">
         <div className="grid gap-6">
           <section className="rounded-xl border border-border bg-surface p-5">
             <h2 className="font-bold">01. Chọn phim</h2>
@@ -373,9 +373,9 @@ export function SeatPicker({
   return (
     <div>
       <BookingSteps active={2} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="booking-content-grid grid gap-6">
         <section className="rounded-xl border border-border bg-surface p-5">
-          <p className="mb-5 text-center text-sm tracking-[.28em] text-muted-foreground">
+          <p className="mb-5 text-center text-sm tracking-widest text-muted-foreground">
             MÀN HÌNH
           </p>
           <div className="mx-auto mb-6 h-2 w-4/5 rounded-full bg-primary/70" />
@@ -455,7 +455,7 @@ export function ComboPicker({
   return (
     <div>
       <BookingSteps active={3} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="booking-content-grid grid gap-6">
         <section className="grid gap-4 sm:grid-cols-2">
           {combos.map((combo) => (
             <article
@@ -590,7 +590,7 @@ export function Checkout({
   return (
     <div>
       <BookingSteps active={4} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="booking-content-grid grid gap-6">
         <form
           className="grid gap-5 rounded-xl border border-border bg-surface p-5"
           onSubmit={(event) => {
@@ -710,7 +710,7 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs tracking-[.2em] text-primary-bright">
+          <p className="text-xs tracking-widest text-primary-bright">
             CINEVERSE E-TICKET
           </p>
           <h1 className="mt-2 text-2xl font-black">{ticket.movieTitle}</h1>

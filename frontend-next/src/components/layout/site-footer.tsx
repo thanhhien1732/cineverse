@@ -3,7 +3,7 @@ import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer className="site-footer px-page">
-      <div className="site-footer-grid mx-auto grid w-full max-w-[85rem] sm:grid-cols-2 lg:grid-cols-4">
+      <div className="site-footer-grid mx-auto grid w-full max-w-340 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Image
             alt="CINEVERSE"
@@ -40,7 +40,7 @@ export function SiteFooter() {
           <p className="site-social-row">f · ▶ · ◎ · ♪</p>
         </div>
       </div>
-      <div className="site-footer-bottom mx-auto flex w-full max-w-[85rem] flex-wrap justify-between gap-3">
+      <div className="site-footer-bottom mx-auto flex w-full max-w-340 flex-wrap justify-between gap-3">
         <span>© 2026 CINEVERSE. All rights reserved.</span>
         <span>Điều khoản sử dụng · Chính sách bảo mật</span>
       </div>
