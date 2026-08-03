@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, MinusIcon, PlusIcon, PrinterIcon } from "lucide-react";
+import { AgeRestrictionModal } from "@/components/booking/age-restriction-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import type {
   Cinema,
@@ -18,13 +20,65 @@ import type {
   Ticket,
 } from "@/types/domain";
 
-const seatPlan: readonly Seat[] = Array.from({ length: 54 }, (_, index) => ({
-  id: `seat-${index + 1}`,
-  label: `${String.fromCharCode(65 + Math.floor(index / 9))}${(index % 9) + 1}`,
-  kind: index % 11 === 0 ? "couple" : index % 4 === 0 ? "vip" : "standard",
-  priceMultiplier: index % 11 === 0 ? 2 : index % 4 === 0 ? 1.32 : 1,
-}));
-const reservedSeatIds = new Set(["seat-7", "seat-18", "seat-37"]);
+interface SeatMapItem extends Seat {
+  readonly row: string;
+}
+
+const standardSeatRows = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+const standardSeats: readonly SeatMapItem[] = standardSeatRows.flatMap((row) =>
+  Array.from({ length: 12 }, (_, index) => {
+    const label = `${row}${index + 1}`;
+    const kind = ["G", "H", "I"].includes(row) ? "vip" : "standard";
+
+    return {
+      id: label,
+      label,
+      row,
+      kind,
+      priceMultiplier: kind === "vip" ? 1.32 : 1,
+    };
+  }),
+);
+const coupleSeats: readonly SeatMapItem[] = Array.from(
+  { length: 6 },
+  (_, index) => {
+    const firstSeatNumber = index * 2 + 1;
+    const label = `J${firstSeatNumber}-J${firstSeatNumber + 1}`;
+
+    return {
+      id: label,
+      label,
+      row: "J",
+      kind: "couple",
+      priceMultiplier: 2,
+    };
+  },
+);
+const seatPlan: readonly SeatMapItem[] = [...standardSeats, ...coupleSeats];
+const reservedSeatIds = new Set([
+  "A3",
+  "A9",
+  "B1",
+  "B7",
+  "C4",
+  "C11",
+  "D2",
+  "D8",
+  "E5",
+  "E12",
+  "F3",
+  "F9",
+  "G1",
+  "G6",
+  "G11",
+  "H4",
+  "H8",
+  "I2",
+  "I7",
+  "I12",
+  "J1-J2",
+  "J9-J10",
+]);
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
@@ -64,10 +118,12 @@ export function BookingSummary({
   movies,
   showtimes,
   combos,
+  action,
 }: {
   movies: readonly Movie[];
   showtimes: readonly Showtime[];
   combos: readonly Combo[];
+  action?: ReactNode;
 }) {
   const draft = useBookingStore((state) => state);
   const movie = movies.find((item) => item.id === draft.movieId);
@@ -83,8 +139,14 @@ export function BookingSummary({
       total + combo.unitPrice * (draft.comboQuantities[combo.id] ?? 0),
     0,
   );
+  const admissionCount = draft.seatIds.reduce(
+    (total, seatId) =>
+      total +
+      (seatPlan.find((seat) => seat.id === seatId)?.kind === "couple" ? 2 : 1),
+    0,
+  );
   return (
-    <aside className="rounded-xl border border-border bg-surface p-5 shadow-cinema">
+    <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
       <p className="text-xs font-bold tracking-[.18em] text-primary-bright">
         TÓM TẮT ĐẶT VÉ
       </p>
@@ -106,6 +168,15 @@ export function BookingSummary({
                 .join(", ")
             : "Chưa chọn"}
         </p>
+        {draft.seatIds.length > 0 && (
+          <div className="selected-seat-list" aria-label="Ghế đã chọn">
+            {draft.seatIds.map((seatId) => (
+              <span className="selected-seat-pill" key={seatId}>
+                {seatPlan.find((seat) => seat.id === seatId)?.label ?? seatId}
+              </span>
+            ))}
+          </div>
+        )}
         {combos
           .filter((combo) => draft.comboQuantities[combo.id])
           .map((combo) => (
@@ -116,13 +187,10 @@ export function BookingSummary({
         <div className="mt-2 flex justify-between border-t pt-3 text-base font-bold">
           <span>Tổng cộng</span>
           <span>
-            {money.format(
-              seatTotal +
-                comboTotal +
-                (draft.seatIds.length ? draft.seatIds.length * 5000 : 0),
-            )}
+            {money.format(seatTotal + comboTotal + admissionCount * 5000)}
           </span>
         </div>
+        {action}
       </div>
     </aside>
   );
@@ -146,8 +214,12 @@ export function ShowtimePicker({
       "",
   );
   const [day, setDay] = useState(days[0].toDateString());
+  const [pendingShowtime, setPendingShowtime] = useState<Showtime | null>(null);
   const selectMovie = useBookingStore((state) => state.selectMovie);
   const selectShowtime = useBookingStore((state) => state.selectShowtime);
+  const pendingMovie = pendingShowtime
+    ? movies.find((movie) => movie.id === pendingShowtime.movieId)
+    : null;
   const visible = showtimes.filter(
     (showtime) =>
       showtime.movieId === movieId &&
@@ -167,8 +239,16 @@ export function ShowtimePicker({
                   <button
                     key={movie.id}
                     type="button"
-                    onClick={() => setMovieId(movie.id)}
-                    className={`rounded-lg border p-3 text-left ${movie.id === movieId ? "border-primary bg-primary/10" : "border-border"}`}
+                    onClick={() => {
+                      setMovieId(movie.id);
+                      setPendingShowtime(null);
+                    }}
+                    className={cn(
+                      "rounded-lg border p-3 text-left",
+                      movie.id === movieId
+                        ? "border-primary bg-primary/10"
+                        : "border-border",
+                    )}
                   >
                     <span className="block font-semibold">{movie.title}</span>
                     <span className="text-xs text-muted-foreground">
@@ -187,7 +267,10 @@ export function ShowtimePicker({
                   type="button"
                   size="sm"
                   variant={day === date.toDateString() ? "default" : "outline"}
-                  onClick={() => setDay(date.toDateString())}
+                  onClick={() => {
+                    setDay(date.toDateString());
+                    setPendingShowtime(null);
+                  }}
                 >
                   {new Intl.DateTimeFormat("vi-VN", {
                     weekday: "short",
@@ -221,11 +304,7 @@ export function ShowtimePicker({
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            selectMovie(movieId);
-                            selectShowtime(showtime.id);
-                            router.push(`/booking/${showtime.id}/seats`);
-                          }}
+                          onClick={() => setPendingShowtime(showtime)}
                         >
                           {new Intl.DateTimeFormat("vi-VN", {
                             hour: "2-digit",
@@ -248,6 +327,20 @@ export function ShowtimePicker({
         </div>
         <BookingSummary movies={movies} showtimes={showtimes} combos={combos} />
       </div>
+      <AgeRestrictionModal
+        open={pendingShowtime !== null}
+        rating={pendingMovie?.ratingLabel ?? "P"}
+        onCancel={() => setPendingShowtime(null)}
+        onConfirm={() => {
+          if (!pendingShowtime) {
+            return;
+          }
+
+          selectMovie(pendingShowtime.movieId);
+          selectShowtime(pendingShowtime.id);
+          router.push(`/booking/${pendingShowtime.id}/seats`);
+        }}
+      />
     </div>
   );
 }
@@ -286,7 +379,23 @@ export function SeatPicker({
                   aria-pressed={isSelected}
                   disabled={isReserved}
                   onClick={() => toggle(seat.id)}
-                  className={`aspect-square rounded text-[.65rem] font-semibold ${isReserved ? "bg-muted opacity-40" : isSelected ? "bg-primary text-primary-foreground" : seat.kind === "vip" ? "bg-warning text-background" : seat.kind === "couple" ? "bg-accent text-foreground" : "bg-surface-raised hover:bg-primary/30"}`}
+                  className={cn(
+                    "aspect-square rounded text-[.65rem] font-semibold",
+                    isReserved && "bg-muted opacity-40",
+                    isSelected && "bg-primary text-primary-foreground",
+                    !isReserved &&
+                      !isSelected &&
+                      seat.kind === "vip" &&
+                      "bg-warning text-background",
+                    !isReserved &&
+                      !isSelected &&
+                      seat.kind === "couple" &&
+                      "bg-accent text-foreground",
+                    !isReserved &&
+                      !isSelected &&
+                      seat.kind === "standard" &&
+                      "bg-surface-raised hover:bg-primary/30",
+                  )}
                 >
                   {seat.label}
                 </button>
@@ -581,7 +690,12 @@ export function Checkout({
 
 export function TicketCard({ ticket }: { ticket: Ticket }) {
   return (
-    <article className="rounded-xl border border-border bg-surface p-6 print:border-black print:bg-white print:text-black">
+    <article
+      className={cn(
+        "rounded-xl border border-border bg-surface p-6",
+        "print:border-black print:bg-white print:text-black",
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs tracking-[.2em] text-primary-bright">

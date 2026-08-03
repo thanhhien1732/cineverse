@@ -1,4 +1,4 @@
-import { SeatPicker } from "@/components/booking/booking-flow";
+import { SeatPicker } from "@/components/booking/seat-picker";
 import {
   mockCatalogueRepository,
   mockComboRepository,

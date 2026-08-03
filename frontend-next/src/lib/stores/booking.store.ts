@@ -9,6 +9,7 @@ interface BookingStore extends BookingDraft {
   selectMovie(movieId: string): void;
   selectShowtime(showtimeId: string): void;
   toggleSeat(seatId: string): void;
+  clearSeats(): void;
   setComboQuantity(comboId: string, quantity: number): void;
   setCheckoutConfirmation(
     field: "acceptedTerms" | "confirmedAgeEligibility",
@@ -46,6 +47,7 @@ export const useBookingStore = create<BookingStore>()(
             ? state.seatIds.filter((id) => id !== seatId)
             : [...state.seatIds, seatId],
         })),
+      clearSeats: () => set({ seatIds: [] }),
       setComboQuantity: (comboId, quantity) =>
         set((state) => {
           const next = { ...state.comboQuantities };
