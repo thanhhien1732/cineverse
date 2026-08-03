@@ -1,0 +1,2 @@
+# Legacy static frontend is retained locally but excluded from Git.
+frontend/
