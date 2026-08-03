@@ -83,8 +83,8 @@ export function AgeRestrictionModal({
     >
       <DialogContent
         className={cn(
-          "max-w-lg overflow-hidden border-white/15 bg-[#0a0f1a] p-0",
-          "shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:max-w-lg",
+          "max-w-lg overflow-hidden border-white/15 bg-surface p-0",
+          "shadow-2xl sm:max-w-lg",
         )}
         showCloseButton={false}
       >
@@ -97,20 +97,17 @@ export function AgeRestrictionModal({
           >
             {policy.code}
           </span>
-
           <div className="grid gap-2">
             <DialogTitle className="text-xl font-black leading-tight">
               Xác nhận giới hạn độ tuổi
             </DialogTitle>
             <p className="font-bold text-warning">{policy.title}</p>
           </div>
-
           <DialogDescription className="text-sm leading-6 text-muted-foreground">
             {policy.description} Bạn xác nhận đã đọc và đáp ứng quy định phân
             loại độ tuổi trước khi chọn ghế.
           </DialogDescription>
         </DialogHeader>
-
         <DialogFooter className="m-0 rounded-none border-white/10 bg-white/2 px-6 py-4">
           <Button variant="outline" onClick={onCancel}>
             Chọn suất khác

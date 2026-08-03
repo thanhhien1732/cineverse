@@ -1,95 +1,143 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { TrailerDialog } from "@/components/movies/trailer-dialog";
+import { Button } from "@/components/ui/button";
 import type { Movie } from "@/types/domain";
-export function HeroSwitcher({ movies }: { movies: readonly Movie[] }) {
-  const [active, setActive] = useState(0);
-  const items = movies.slice(0, 4);
+
+const heroAccents: Readonly<Record<string, string>> = {
+  "minions-monsters": "#ffcf35",
+  "super-mario-galaxy": "#66c8ff",
+  "disclosure-day": "#70e1ff",
+  "the-odyssey": "#e59a5b",
+  "forgotten-island": "#76bc9c",
+};
+
+function getHeroTitleClass(title: string) {
+  if (title.length >= 26) {
+    return "is-extra-long";
+  }
+
+  if (title.length >= 17) {
+    return "is-long";
+  }
+
+  return undefined;
+}
+
+export function HeroSwitcher({
+  movies,
+}: {
+  readonly movies: readonly Movie[];
+}) {
+  const items = useMemo(() => movies.slice(0, 5), [movies]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const movie = items[activeIndex] ?? items[0];
+
   useEffect(() => {
-    const timer = window.setInterval(
-      () => setActive((current) => (current + 1) % items.length),
-      6500,
-    );
+    if (items.length < 2) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setActiveIndex((currentIndex) => (currentIndex + 1) % items.length);
+    }, 6500);
+
     return () => window.clearInterval(timer);
   }, [items.length]);
-  const movie = items[active] ?? items[0];
+
+  if (!movie) {
+    return null;
+  }
+
+  function setActive(nextIndex: number) {
+    setActiveIndex((nextIndex + items.length) % items.length);
+  }
+
   return (
-    <section className="relative isolate min-h-[min(760px,86vh)] overflow-hidden border-b border-border">
+    <section
+      className="home-hero"
+      style={
+        {
+          "--hero-accent": heroAccents[movie.id] ?? "var(--primary-bright)",
+        } as CSSProperties
+      }
+    >
       <Image
+        aria-hidden="true"
         alt=""
-        aria-hidden
+        className="home-hero-image"
         fill
+        key={movie.id}
         priority
         sizes="100vw"
         src={movie.backdropPath}
-        className="-z-20 object-cover animate-[hero-scale_8s_ease_both]"
       />
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(3_5_10/.95),rgb(3_5_10/.5)_49%,rgb(3_5_10/.2)),linear-gradient(0deg,rgb(3_5_10/.95),rgb(3_5_10/.06)_48%,rgb(3_5_10/.45))]" />
-      <div className="mx-auto grid min-h-[min(760px,86vh)] max-w-340 content-center px-page pb-33 pt-20">
-        <p className="text-xs font-extrabold tracking-[.16em] text-primary-bright">
-          FEATURED PRESENTATION
+      <div className="hero-vignette home-hero-vignette" />
+      <div className="home-container home-hero-content">
+        <p className="home-hero-kicker">
+          {movie.status === "now-showing"
+            ? "ĐANG CHIẾU TẠI CINEVERSE"
+            : "SẮP CHIẾU TẠI CINEVERSE"}
         </p>
-        <h1 className="mt-5 max-w-195 text-[clamp(3.25rem,8.8vw,8.4rem)] font-black leading-[.86] -tracking-widest text-white uppercase">
-          {movie.title}
-        </h1>
-        <p className="mt-6 max-w-145 text-lg text-white/88">
-          {movie.tagline}
-        </p>
-        <p className="mt-5 text-xs font-bold tracking-[.06em] text-foreground-muted uppercase">
-          {movie.ratingLabel} · {movie.durationMinutes} phút ·{" "}
-          {movie.formats.join(" · ")}
-        </p>
-        <div className="mt-7 flex gap-3">
-          <Link
-            className={buttonVariants({ size: "lg" })}
-            href={`/movies/${movie.id}`}
-          >
-            Khám phá phim
-          </Link>
-          <Link
-            className={buttonVariants({ size: "lg", variant: "outline" })}
-            href="/movies"
-          >
-            Xem lịch phim
-          </Link>
+        <h1 className={getHeroTitleClass(movie.title)}>{movie.title}</h1>
+        <p className="home-hero-tagline">{movie.tagline}</p>
+        <div className="home-hero-actions">
+          {movie.status === "now-showing" ? (
+            <Link
+              className="home-primary-button"
+              href={`/showtimes?movie=${movie.id}`}
+            >
+              Đặt vé ngay
+              <TicketIcon aria-hidden="true" />
+            </Link>
+          ) : (
+            <Link className="home-primary-button" href={`/movies/${movie.id}`}>
+              Khám phá phim
+              <ArrowRightIcon aria-hidden="true" />
+            </Link>
+          )}
+          <TrailerDialog movie={movie} triggerClassName="home-ghost-button" />
         </div>
-        <div className="absolute inset-x-page bottom-6 mx-auto max-w-340 rounded-[14px] border border-white/13 bg-[rgb(5_8_14/.68)] p-4 backdrop-blur-xl">
-          <div className="mb-3 flex items-center justify-between text-[.68rem] font-extrabold tracking-[.16em] text-white/58">
-            <span>FEATURED NOW</span>
-            <div className="flex gap-2">
-              <Button
-                size="icon-sm"
-                variant="outline"
-                onClick={() =>
-                  setActive((active + items.length - 1) % items.length)
-                }
-              >
-                <ChevronLeftIcon />
-              </Button>
-              <Button
-                size="icon-sm"
-                variant="outline"
-                onClick={() => setActive((active + 1) % items.length)}
-              >
-                <ChevronRightIcon />
-              </Button>
-            </div>
+      </div>
+      <div className="home-container home-hero-switcher">
+        <div className="home-hero-switcher-head">
+          <span>Phim nổi bật</span>
+          <div className="home-hero-switcher-arrows">
+            <Button
+              aria-label="Phim trước"
+              onClick={() => setActive(activeIndex - 1)}
+              size="icon-lg"
+              variant="ghost"
+            >
+              <ArrowLeftIcon />
+            </Button>
+            <Button
+              aria-label="Phim tiếp theo"
+              onClick={() => setActive(activeIndex + 1)}
+              size="icon-lg"
+              variant="ghost"
+            >
+              <ArrowRightIcon />
+            </Button>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {items.map((item, index) => (
-              <button
-                key={item.id}
-                className={`relative grid gap-1 border-b-2 pb-3 text-left text-[.68rem] ${index === active ? "border-primary-bright text-white" : "border-white/13 text-white/48"}`}
-                onClick={() => setActive(index)}
-              >
-                <span className="tracking-[.15em]">0{index + 1}</span>
-                <strong className="truncate">{item.title}</strong>
-              </button>
-            ))}
-          </div>
+        </div>
+        <div className="home-hero-tabs grid grid-cols-5">
+          {items.map((item, index) => (
+            <button
+              className={index === activeIndex ? "is-active" : undefined}
+              key={item.id}
+              onClick={() => setActive(index)}
+              type="button"
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{item.title}</strong>
+              <i aria-hidden="true" />
+            </button>
+          ))}
         </div>
       </div>
     </section>

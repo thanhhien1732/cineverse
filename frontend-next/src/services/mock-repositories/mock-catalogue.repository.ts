@@ -3,7 +3,12 @@ import type { CatalogueRepository } from "@/types/repositories";
 
 type MovieFixture = Omit<
   Movie,
-  "slug" | "description" | "posterPath" | "backdropPath" | "trailerPath"
+  | "slug"
+  | "description"
+  | "posterPath"
+  | "backdropPath"
+  | "trailerPath"
+  | "releaseLabel"
 > & {
   readonly poster: string;
   readonly backdrop: string;
@@ -161,9 +166,26 @@ const fixtures: readonly MovieFixture[] = [
     "jpg",
   ),
 ];
+
+const releaseLabels: Readonly<Record<string, string>> = {
+  "minions-monsters": "01.07.2026",
+  "super-mario-galaxy": "01.04.2026",
+  "reminders-of-him": "13.03.2026",
+  "you-me-tuscany": "10.04.2026",
+  "disclosure-day": "03.07.2026",
+  "the-odyssey": "17.07.2026",
+  "forgotten-island": "25.09.2026",
+  "focker-in-law": "25.11.2026",
+  "one-night-only": "07.08.2026",
+  "five-nights-at-freddys-2": "Sự kiện đặc biệt",
+  "wicked-for-good": "Sự kiện đặc biệt",
+  "black-phone-2": "Sự kiện đặc biệt",
+};
+
 const movies: readonly Movie[] = fixtures.map(
   ({ poster, backdrop, trailer, ...value }) => ({
     ...value,
+    releaseLabel: releaseLabels[value.id] ?? "Đang cập nhật",
     slug: value.id,
     description,
     posterPath: poster,
