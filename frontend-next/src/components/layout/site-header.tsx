@@ -22,8 +22,6 @@ export function SiteHeader() {
   const items = [
     ["Trang chủ", "/"],
     ["Phim", "/movies"],
-    ["Đang chiếu", "/movies?status=now-showing"],
-    ["Sắp chiếu", "/movies?status=coming-soon"],
   ] as const;
   const isHome = pathname === "/";
   const active = (href: string) =>
@@ -46,8 +44,8 @@ export function SiteHeader() {
         <Link className="shrink-0" href="/" aria-label="CINEVERSE home">
           <Image
             alt="CINEVERSE"
-            height={28}
-            width={154}
+            height={53}
+            width={236}
             src="/assets/logo.svg"
             priority
           />
@@ -56,11 +54,7 @@ export function SiteHeader() {
           {items.map(([label, href]) => (
             <Link
               key={href}
-              className={
-                active(href)
-                  ? "font-semibold text-foreground"
-                  : "hover:text-foreground"
-              }
+              className={active(href) ? "is-active" : undefined}
               href={href}
               aria-current={active(href) ? "page" : undefined}
             >
@@ -75,7 +69,7 @@ export function SiteHeader() {
           </Link>
           <Link className="site-ticket-link" href={destination}>
             <TicketIcon aria-hidden="true" className="size-[1.125rem]" />
-            <span>{booking.showtimeId ? "Tiếp tục đặt vé" : "Vé của bạn"}</span>
+            <span>{booking.showtimeId ? "Đang đặt vé" : "Vé của tôi"}</span>
             <b
               className={
                 booking.seatIds.length || booking.tickets.length
@@ -119,7 +113,7 @@ export function SiteHeader() {
               Đăng nhập / Đăng ký
             </Link>
             <Link onClick={() => setOpen(false)} href={destination}>
-              Tiếp tục đặt vé
+              {booking.showtimeId ? "Tiếp tục đặt vé" : "Vé của tôi"}
             </Link>
           </nav>
         </div>
