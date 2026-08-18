@@ -2753,6 +2753,7 @@
   .site-footer-grid h2 {
     margin: 0.125rem 0 0.875rem;
     font-size: 0.79rem;
+    font-weight: 700;
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -2790,6 +2791,9 @@
   }
 
   .site-footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.125rem;
     margin-top: 2.625rem;
     padding-top: 1.125rem;
     border-top: 1px solid var(--border);
@@ -2902,6 +2906,10 @@
     .site-footer-grid {
       grid-template-columns: 1fr;
       gap: 1.5rem;
+    }
+
+    .site-footer-bottom {
+      display: grid;
     }
   }
 }
