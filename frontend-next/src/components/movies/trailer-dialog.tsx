@@ -18,12 +18,14 @@ import type { Movie } from "@/types/domain";
 export function TrailerDialog({
   movie,
   triggerClassName,
+  onOpenChange,
 }: {
   readonly movie: Movie;
   readonly triggerClassName?: string;
+  readonly onOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <Dialog>
+    <Dialog onOpenChange={(open) => onOpenChange?.(open)}>
       <DialogTrigger
         render={<button className={triggerClassName} type="button" />}
       >
@@ -32,7 +34,7 @@ export function TrailerDialog({
       </DialogTrigger>
       <DialogContent
         aria-label={`Trailer ${movie.title}`}
-        className="home-preview-modal max-w-3xl bg-surface p-0"
+        className="home-preview-modal sm:max-w-5xl bg-surface p-0"
         showCloseButton={false}
       >
         <DialogHeader className="sr-only">

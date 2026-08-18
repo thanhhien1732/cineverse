@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { TrailerDialog } from "@/components/movies/trailer-dialog";
 import { Button } from "@/components/ui/button";
 import type { Movie } from "@/types/domain";
@@ -35,7 +41,13 @@ export function HeroSwitcher({
 }) {
   const items = useMemo(() => movies.slice(0, 5), [movies]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const isTrailerOpenRef = useRef(isTrailerOpen);
   const movie = items[activeIndex] ?? items[0];
+
+  useEffect(() => {
+    isTrailerOpenRef.current = isTrailerOpen;
+  }, [isTrailerOpen]);
 
   useEffect(() => {
     if (items.length < 2) {
@@ -43,6 +55,10 @@ export function HeroSwitcher({
     }
 
     const timer = window.setInterval(() => {
+      if (isTrailerOpenRef.current) {
+        return;
+      }
+
       setActiveIndex((currentIndex) => (currentIndex + 1) % items.length);
     }, 6500);
 
@@ -100,7 +116,11 @@ export function HeroSwitcher({
               <ArrowRightIcon aria-hidden="true" />
             </Link>
           )}
-          <TrailerDialog movie={movie} triggerClassName="home-ghost-button" />
+          <TrailerDialog
+            movie={movie}
+            onOpenChange={setIsTrailerOpen}
+            triggerClassName="home-ghost-button"
+          />
         </div>
       </div>
       <div className="home-container home-hero-switcher">
