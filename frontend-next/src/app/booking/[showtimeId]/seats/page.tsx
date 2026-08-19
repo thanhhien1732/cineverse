@@ -23,7 +23,7 @@ export default async function Page({
   ).flat();
   return (
     <section className="mx-auto max-w-340 px-page py-section">
-      <h1 className="text-4xl font-black">Chọn ghế</h1>
+      <h1 className="text-4xl font-black uppercase">Chọn ghế</h1>
       <div className="mt-8">
         <SeatPicker movies={movies} showtimes={showtimes} combos={combos} />
       </div>

@@ -11,13 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-interface AgeRestrictionPolicy {
+export interface AgeRestrictionPolicy {
   readonly code: string;
   readonly title: string;
   readonly description: string;
 }
 
-const ageRestrictionPolicies: Readonly<Record<string, AgeRestrictionPolicy>> = {
+export const ageRestrictionPolicies: Readonly<
+  Record<string, AgeRestrictionPolicy>
+> = {
   P: {
     code: "P",
     title: "Phổ biến cho mọi độ tuổi",
@@ -50,7 +52,7 @@ const ageRestrictionPolicies: Readonly<Record<string, AgeRestrictionPolicy>> = {
   },
 };
 
-const ratingAliases: Readonly<Record<string, string>> = {
+export const ratingAliases: Readonly<Record<string, string>> = {
   T13: "C13",
   T16: "C16",
 };

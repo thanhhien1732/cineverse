@@ -4,8 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, MinusIcon, PlusIcon, PrinterIcon } from "lucide-react";
-import { AgeRestrictionModal } from "@/components/booking/age-restriction-modal";
+import {
+  ArrowRightIcon,
+  CakeIcon,
+  CheckIcon,
+  MinusIcon,
+  PlusIcon,
+  PrinterIcon,
+  TicketIcon,
+} from "lucide-react";
+import {
+  AgeRestrictionModal,
+  ageRestrictionPolicies,
+  ratingAliases,
+} from "@/components/booking/age-restriction-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -208,6 +220,95 @@ export function BookingSummary({
   );
 }
 
+function ShowtimeSelectionSummary({
+  movie,
+  ratingLabel,
+  dayLabel,
+  cinemaLabel,
+  showtimeLabel,
+  canContinue,
+  onContinue,
+}: {
+  movie: Movie | undefined;
+  ratingLabel: string;
+  dayLabel: string;
+  cinemaLabel: string;
+  showtimeLabel: string;
+  canContinue: boolean;
+  onContinue: () => void;
+}) {
+  const normalizedRating = ratingAliases[ratingLabel] ?? ratingLabel;
+  const policy =
+    ageRestrictionPolicies[normalizedRating] ?? ageRestrictionPolicies.P;
+
+  return (
+    <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
+      <div className="flex items-center gap-2.5 border-b border-border pb-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
+          <TicketIcon className="size-[18px]" />
+        </span>
+        <div className="grid gap-0.5">
+          <p className="text-[.63rem] font-extrabold tracking-[.11em] text-muted-foreground uppercase">
+            Lựa chọn hiện tại
+          </p>
+          <p className="font-bold leading-tight">
+            {movie?.title ?? "Chọn phim"}
+          </p>
+        </div>
+      </div>
+
+      <dl className="my-3.5 grid">
+        {[
+          { label: "Phân loại", value: null },
+          { label: "Ngày", value: dayLabel },
+          { label: "Rạp", value: cinemaLabel },
+          { label: "Suất chiếu", value: showtimeLabel },
+        ].map((row) => (
+          <div
+            key={row.label}
+            className="flex items-start justify-between gap-4 py-1.5"
+          >
+            <dt className="text-sm text-muted-foreground">{row.label}</dt>
+            <dd className="m-0 max-w-[60%] text-right text-sm font-bold">
+              {row.value === null ? (
+                <Badge variant="outline" className="uppercase">
+                  {policy.code}
+                </Badge>
+              ) : (
+                row.value
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="my-3.5 flex items-start gap-2.5 rounded-[10px] border border-cv-primary-bright/20 bg-primary/6 p-3">
+        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
+          <CakeIcon className="size-[17px]" />
+        </span>
+        <div className="grid gap-1">
+          <p className="text-[.71rem] leading-snug text-muted-foreground">
+            {policy.description}
+          </p>
+          <p className="text-[.71rem] font-bold text-cv-warning italic">
+            Điều kiện độ tuổi sẽ được kiểm tra trước khi thanh toán.
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="summary-cta-button"
+        disabled={!canContinue}
+        onClick={onContinue}
+      >
+        Chọn ghế
+        <ArrowRightIcon />
+      </button>
+    </aside>
+  );
+}
+
 export function ShowtimePicker({
   movies,
   cinemas,
@@ -227,10 +328,12 @@ export function ShowtimePicker({
   );
   const [day, setDay] = useState(days[0].toDateString());
   const [pendingShowtime, setPendingShowtime] = useState<Showtime | null>(null);
+  const [ageModalOpen, setAgeModalOpen] = useState(false);
   const selectMovie = useBookingStore((state) => state.selectMovie);
   const selectShowtime = useBookingStore((state) => state.selectShowtime);
-  const pendingMovie = pendingShowtime
-    ? movies.find((movie) => movie.id === pendingShowtime.movieId)
+  const selectedMovie = movies.find((movie) => movie.id === movieId);
+  const selectedCinema = pendingShowtime
+    ? cinemas.find((cinema) => cinema.id === pendingShowtime.cinemaId)
     : null;
   const visible = showtimes.filter(
     (showtime) =>
@@ -315,7 +418,11 @@ export function ShowtimePicker({
                           key={showtime.id}
                           type="button"
                           size="sm"
-                          variant="outline"
+                          variant={
+                            pendingShowtime?.id === showtime.id
+                              ? "default"
+                              : "outline"
+                          }
                           onClick={() => setPendingShowtime(showtime)}
                         >
                           {new Intl.DateTimeFormat("vi-VN", {
@@ -337,12 +444,32 @@ export function ShowtimePicker({
             </div>
           </section>
         </div>
-        <BookingSummary movies={movies} showtimes={showtimes} combos={combos} />
+        <ShowtimeSelectionSummary
+          movie={selectedMovie}
+          ratingLabel={selectedMovie?.ratingLabel ?? "P"}
+          dayLabel={new Intl.DateTimeFormat("vi-VN", {
+            weekday: "long",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }).format(new Date(day))}
+          cinemaLabel={selectedCinema?.name ?? "Chưa chọn"}
+          showtimeLabel={
+            pendingShowtime
+              ? `${new Intl.DateTimeFormat("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(pendingShowtime.startsAt))} · ${pendingShowtime.format}`
+              : "Chưa chọn"
+          }
+          canContinue={pendingShowtime !== null}
+          onContinue={() => setAgeModalOpen(true)}
+        />
       </div>
       <AgeRestrictionModal
-        open={pendingShowtime !== null}
-        rating={pendingMovie?.ratingLabel ?? "P"}
-        onCancel={() => setPendingShowtime(null)}
+        open={ageModalOpen}
+        rating={selectedMovie?.ratingLabel ?? "P"}
+        onCancel={() => setAgeModalOpen(false)}
         onConfirm={() => {
           if (!pendingShowtime) {
             return;

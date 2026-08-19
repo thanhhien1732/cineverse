@@ -311,6 +311,56 @@
     top: 6rem;
   }
 
+  .summary-cta-button {
+    display: inline-flex;
+    width: 100%;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0 1.125rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(110deg, var(--primary), #5367ff 62%, #7b56ff);
+    box-shadow: 0 0.75rem 2.125rem rgb(81 102 255 / 32%);
+    color: white;
+    font-size: 0.77rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition:
+      transform 180ms ease,
+      background 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .summary-cta-button svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 auto;
+  }
+
+  .summary-cta-button:hover:not(:disabled) {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 1rem 2.625rem rgb(81 102 255 / 50%);
+  }
+
+  .summary-cta-button:focus-visible {
+    outline: 2px solid var(--primary-bright);
+    outline-offset: 3px;
+  }
+
+  .summary-cta-button:disabled {
+    border-color: rgb(255 255 255 / 9%);
+    background: rgb(255 255 255 / 6%);
+    box-shadow: none;
+    color: rgb(255 255 255 / 42%);
+    cursor: not-allowed;
+  }
+
   @media (max-width: 48rem) {
     .seat-context {
       align-items: stretch;
@@ -853,8 +903,8 @@
     border: 1px solid rgb(139 213 255 / 44%);
     border-radius: 50%;
     background: linear-gradient(145deg,
-      rgb(95 109 255 / 32%),
-      rgb(199 93 255 / 18%));
+        rgb(95 109 255 / 32%),
+        rgb(199 93 255 / 18%));
     color: white;
     font-size: 1.4rem;
     font-weight: 900;
@@ -966,8 +1016,8 @@
     border-radius: 0.875rem;
     outline: none;
     background: linear-gradient(135deg,
-      rgb(95 109 255 / 12%),
-      rgb(199 93 255 / 6%));
+        rgb(95 109 255 / 12%),
+        rgb(199 93 255 / 6%));
     cursor: help;
   }
 
@@ -1239,8 +1289,8 @@
 
   .site-account-avatar-initials {
     background: linear-gradient(145deg,
-      rgb(95 109 255 / 60%),
-      rgb(199 93 255 / 40%));
+        rgb(95 109 255 / 60%),
+        rgb(199 93 255 / 40%));
     color: white;
     font-size: 0.56rem;
     font-weight: 900;
@@ -3061,8 +3111,8 @@
         rgb(1 3 8 / 4%),
         rgb(1 3 8 / 22%) 55%,
         rgb(1 3 8 / 88%)),
-      url("/assets/media/static/newsletter-earth.webp") center bottom / min(68.75rem, 95vw) auto no-repeat,
-      url("/assets/media/static/newsletter-bg.webp") center / cover no-repeat,
+      url("/assets/static/newsletter-earth.webp") center bottom / min(68.75rem, 95vw) auto no-repeat,
+      url("/assets/static/newsletter-bg.webp") center / cover no-repeat,
       #030712;
   }
 
@@ -3269,8 +3319,8 @@
           rgb(1 3 8 / 6%),
           rgb(1 3 8 / 42%) 48%,
           rgb(1 3 8 / 95%)),
-        url("/assets/media/static/newsletter-earth.webp") 58% bottom / 53.75rem auto no-repeat,
-        url("/assets/media/static/newsletter-bg.webp") center / cover no-repeat,
+        url("/assets/static/newsletter-earth.webp") 58% bottom / 53.75rem auto no-repeat,
+        url("/assets/static/newsletter-bg.webp") center / cover no-repeat,
         #030712;
     }
 
@@ -3701,6 +3751,7 @@
     }
   }
 }
+
 @layer components {
   .catalog-tools {
     display: flex;
@@ -3846,14 +3897,14 @@
     transform: translateY(-50%) scale(1.1);
   }
 
-  @media (width <= 57.5rem) {
+  @media (width <=57.5rem) {
     .filter-boxes {
       flex-basis: 100%;
       width: 100%;
     }
   }
 
-  @media (width <= 42.5rem) {
+  @media (width <=42.5rem) {
     .filter-tabs {
       width: 100%;
     }
