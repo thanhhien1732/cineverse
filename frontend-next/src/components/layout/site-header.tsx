@@ -6,19 +6,24 @@ import { MenuIcon, TicketIcon, UserRoundIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useBookingStore } from "@/lib/stores/booking.store";
+import { useAuthStore } from "@/lib/stores/auth.store";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const booking = useBookingStore((state) => state);
-  const destination = booking.showtimeId
+  const isAuthenticated = Boolean(useAuthStore((state) => state.profile));
+  const ticketDestination = booking.showtimeId
     ? booking.seatIds.length
       ? "/booking/combos"
       : `/booking/${booking.showtimeId}/seats`
     : booking.tickets.length
       ? "/tickets"
       : "/showtimes";
+  const destination = isAuthenticated
+    ? ticketDestination
+    : `/auth?next=${encodeURIComponent(ticketDestination)}`;
   const items = [
     ["Trang chủ", "/"],
     ["Phim", "/movies"],

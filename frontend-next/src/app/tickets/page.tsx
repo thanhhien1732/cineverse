@@ -1,8 +1,24 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useBookingStore } from "@/lib/stores/booking.store";
+import { useAuthStore } from "@/lib/stores/auth.store";
 export default function Page() {
+  const router = useRouter();
   const tickets = useBookingStore((state) => state.tickets);
+  const profile = useAuthStore((state) => state.profile);
+
+  useEffect(() => {
+    if (!profile) {
+      router.replace("/auth?next=/tickets");
+    }
+  }, [profile, router]);
+
+  if (!profile) {
+    return null;
+  }
+
   return (
     <section className="mx-auto max-w-4xl px-page py-section">
       <h1 className="text-4xl font-black">Vé của tôi</h1>

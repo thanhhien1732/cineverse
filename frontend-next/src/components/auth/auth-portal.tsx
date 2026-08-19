@@ -12,9 +12,11 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFeedback } from "@/components/feedback/feedback-provider";
+import { useAuthStore } from "@/lib/stores/auth.store";
 import { cn } from "@/lib/utils";
 
 type AuthTab = "login" | "register";
@@ -28,12 +30,6 @@ interface GuestFormValues {
   readonly confirmPassword: string;
   readonly remember: boolean;
   readonly acceptedTerms: boolean;
-}
-
-interface MemberProfile {
-  readonly fullName: string;
-  readonly email: string;
-  readonly phone: string;
 }
 
 type FormErrors = Partial<Record<keyof GuestFormValues, string>>;
@@ -98,10 +94,15 @@ function FieldError({ message }: { readonly message?: string }) {
 
 export function AuthPortal() {
   const { notify } = useFeedback();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
+  const profile = useAuthStore((state) => state.profile);
+  const login = useAuthStore((state) => state.login);
+  const logout = useAuthStore((state) => state.logout);
   const [activeTab, setActiveTab] = useState<AuthTab>("login");
   const [values, setValues] = useState<GuestFormValues>(initialGuestForm);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [profile, setProfile] = useState<MemberProfile | null>(null);
 
   const setTextField = (field: keyof GuestFormValues) => {
     return (event: ChangeEvent<HTMLInputElement>) => {
@@ -136,19 +137,22 @@ export function AuthPortal() {
       return;
     }
 
-    const nextProfile: MemberProfile = {
+    login({
       fullName:
         activeTab === "register" ? values.fullName.trim() : "Khách Cineverse",
       email: values.email.trim(),
       phone: activeTab === "register" ? values.phone.trim() : "Chưa cập nhật",
-    };
-    setProfile(nextProfile);
+    });
     notify(
       activeTab === "register"
         ? "Tạo tài khoản thành công. Chào mừng bạn đến với CINEVERSE."
         : "Đăng nhập thành công.",
       "success",
     );
+
+    if (nextPath) {
+      router.push(nextPath);
+    }
   };
 
   if (profile) {
@@ -201,7 +205,7 @@ export function AuthPortal() {
               <Button
                 className="w-full"
                 onClick={() => {
-                  setProfile(null);
+                  logout();
                   setValues(initialGuestForm);
                   setActiveTab("login");
                   notify("Bạn đã đăng xuất khỏi tài khoản mock.", "success");
