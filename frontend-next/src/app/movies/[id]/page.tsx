@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon, Clock3Icon, MapPinIcon } from "lucide-react";
-import { MovieCard } from "@/components/movies/movie-card";
+import { RelatedMovieCard } from "@/components/movies/related-movie-card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { TrailerDialog } from "@/components/movies/trailer-dialog";
@@ -55,7 +55,7 @@ export default async function MovieDetailPage({
             <p className="text-xs font-bold tracking-[.24em] text-primary-bright">
               {movie.status === "now-showing" ? "NOW SHOWING" : "COMING SOON"}
             </p>
-            <h1 className="text-5xl font-black tracking-[-.08em] sm:text-7xl">
+            <h1 className="text-5xl font-black tracking-tight sm:text-7xl">
               {movie.title}
             </h1>
             <p className="text-xl text-foreground-muted">{movie.tagline}</p>
@@ -67,7 +67,13 @@ export default async function MovieDetailPage({
               ))}
             </div>
             <div className="flex flex-wrap gap-3">
-              <TrailerDialog movie={movie} />
+              <TrailerDialog
+                movie={movie}
+                triggerClassName={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+              />
               <Link
                 href="/showtimes"
                 className={buttonVariants({ size: "lg" })}
@@ -137,10 +143,19 @@ export default async function MovieDetailPage({
       </section>
       <section className="border-t border-border bg-surface/50">
         <div className="mx-auto w-full max-w-[85rem] px-page py-section">
-          <h2 className="text-3xl font-black">Có thể bạn quan tâm</h2>
-          <div className="mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="home-section-head">
+            <div>
+              <p className="eyebrow">TIẾP TỤC KHÁM PHÁ</p>
+              <h2>Có thể bạn quan tâm</h2>
+            </div>
+            <Link className="home-text-link" href="/movies">
+              Tất cả phim
+              <ArrowRightIcon aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="related-grid">
             {related.map((item) => (
-              <MovieCard key={item.id} movie={item} />
+              <RelatedMovieCard key={item.id} movie={item} />
             ))}
           </div>
         </div>

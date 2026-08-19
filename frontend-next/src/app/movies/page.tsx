@@ -13,10 +13,10 @@ export default async function MoviesPage({
   return (
     <section className="mx-auto w-full max-w-340 px-page py-section">
       <div className="mb-10 flex max-w-2xl flex-col gap-3">
-        <p className="text-xs font-bold tracking-widest text-primary-bright">
+        <p className="text-xs font-bold tracking-widest text-cv-primary-bright">
           MOVIE CATALOGUE
         </p>
-        <h1 className="text-5xl font-black -tracking-widest sm:text-6xl">
+        <h1 className="text-5xl font-black tracking-tight sm:text-6xl">
           Chọn màn ảnh của bạn.
         </h1>
         <p className="text-lg leading-8 text-muted-foreground">
