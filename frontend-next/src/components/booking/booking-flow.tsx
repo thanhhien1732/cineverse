@@ -94,12 +94,12 @@ const days = Array.from({ length: 7 }, (_, index) => {
 
 export function BookingSteps({ active }: { active: number }) {
   return (
-    <ol className="mb-8 grid grid-cols-5 gap-2 text-center text-xs text-muted-foreground">
+    <ol className="mb-10 grid grid-cols-5 gap-2 text-center text-xs text-muted-foreground">
       {["Suất chiếu", "Ghế ngồi", "Combo", "Thanh toán", "Mã vé"].map(
         (label, index) => (
           <li
             key={label}
-            className={index + 1 <= active ? "text-primary-bright" : ""}
+            className={index + 1 <= active ? "text-cv-primary-bright" : ""}
           >
             <span className="mx-auto mb-1 flex size-7 items-center justify-center rounded-full border border-current">
               {index + 1 < active ? (

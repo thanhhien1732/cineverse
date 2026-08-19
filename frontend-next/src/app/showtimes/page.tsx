@@ -19,11 +19,14 @@ export default async function Page() {
   ).flat();
   return (
     <section className="mx-auto max-w-340 px-page py-section">
-      <h1 className="text-4xl font-black">Chọn suất chiếu</h1>
-      <p className="mt-2 text-muted-foreground">
-        Chọn phim, ngày, rạp và khung giờ phù hợp.
+      <p className="text-xs font-bold tracking-[.2em] text-cv-primary-bright uppercase">
+        Đặt vé
       </p>
-      <div className="mt-8">
+      <h1 className="mt-3 text-5xl font-black uppercase">Chọn suất chiếu</h1>
+      <p className="mt-4 text-muted-foreground">
+        Chọn phim, ngày chiếu và rạp phù hợp với lịch trình của bạn.
+      </p>
+      <div className="mt-10">
         <ShowtimePicker
           movies={movies}
           cinemas={cinemas}
