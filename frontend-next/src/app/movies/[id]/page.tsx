@@ -1,11 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRightIcon, Clock3Icon, MapPinIcon } from "lucide-react";
+import type { CSSProperties } from "react";
+import {
+  ArrowRightIcon,
+  Clock3Icon,
+  ClockIcon,
+  ClapperboardIcon,
+  StarIcon,
+  TicketIcon,
+} from "lucide-react";
 import { RelatedMovieCard } from "@/components/movies/related-movie-card";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { TrailerDialog } from "@/components/movies/trailer-dialog";
+import { formatDuration } from "@/lib/utils";
 import {
   mockCatalogueRepository,
   mockShowtimeRepository,
@@ -23,16 +31,18 @@ export default async function MovieDetailPage({
     mockShowtimeRepository.findCinemas(),
     mockShowtimeRepository.findShowtimesByMovie(movie.id),
   ]);
-  const related = movies
-    .filter(
-      (item) =>
-        item.id !== movie.id &&
-        item.genres.some((genre) => movie.genres.includes(genre)),
-    )
-    .slice(0, 4);
+  const others = movies.filter((item) => item.id !== movie.id);
+  const sameGenre = others.filter((item) =>
+    item.genres.some((genre) => movie.genres.includes(genre)),
+  );
+  const rest = others.filter((item) => !sameGenre.includes(item));
+  const related = [...sameGenre, ...rest].slice(0, 4);
   return (
     <>
-      <section className="relative isolate overflow-hidden border-b border-border">
+      <section
+        className="relative isolate overflow-hidden border-b border-border"
+        style={{ "--hero-accent": movie.accentColor } as CSSProperties}
+      >
         <Image
           alt=""
           aria-hidden
@@ -43,43 +53,58 @@ export default async function MovieDetailPage({
           src={movie.backdropPath}
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,var(--background)_10%,rgb(5_7_13/82%)_56%,rgb(5_7_13/30%)_100%)]" />
-        <div className="mx-auto grid min-h-[34rem] w-full max-w-[85rem] items-end gap-8 px-page py-section md:grid-cols-[13rem_minmax(0,1fr)] md:items-center">
-          <Image
-            alt={`Poster ${movie.title}`}
-            className="hidden rounded-xl object-cover shadow-cinema md:block"
-            height={320}
-            width={213}
-            src={movie.posterPath}
-          />
-          <div className="flex max-w-2xl flex-col gap-5">
-            <p className="text-xs font-bold tracking-[.24em] text-primary-bright">
+        <div className="detail-layout mx-auto w-full max-w-[85rem] px-page">
+          <div className="detail-poster">
+            <Image
+              alt={`Poster ${movie.title}`}
+              fill
+              priority
+              sizes="(max-width: 680px) 8.75rem, (max-width: 920px) 11.875rem, 17.5rem"
+              src={movie.posterPath}
+            />
+            <span>{movie.ratingLabel}</span>
+          </div>
+          <div className="detail-content">
+            <p className="eyebrow">
               {movie.status === "now-showing" ? "NOW SHOWING" : "COMING SOON"}
             </p>
-            <h1 className="text-5xl font-black tracking-tight sm:text-7xl">
-              {movie.title}
-            </h1>
-            <p className="text-xl text-foreground-muted">{movie.tagline}</p>
-            <div className="flex flex-wrap gap-2">
-              {movie.formats.map((format) => (
-                <Badge key={format} variant="outline">
-                  {format}
-                </Badge>
+            <h1>{movie.title}</h1>
+            <p className="detail-tagline">{movie.tagline}</p>
+            <div className="detail-meta">
+              <span>
+                <StarIcon aria-hidden="true" className="size-4" />
+                {movie.scoreLabel}
+              </span>
+              <span>
+                <ClockIcon aria-hidden="true" className="size-4" />
+                {formatDuration(movie.durationMinutes)}
+              </span>
+              {movie.languageLabel ? <span>{movie.languageLabel}</span> : null}
+            </div>
+            <div className="genre-list">
+              {movie.genres.map((genre) => (
+                <span key={genre}>{genre}</span>
               ))}
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="home-hero-actions">
+              {movie.status === "now-showing" ? (
+                <Link
+                  className="home-primary-button"
+                  href={`/showtimes?movie=${movie.id}`}
+                >
+                  Đặt vé ngay
+                  <TicketIcon aria-hidden="true" />
+                </Link>
+              ) : (
+                <span className="home-primary-button home-muted-button">
+                  Sắp mở bán vé
+                </span>
+              )}
               <TrailerDialog
                 movie={movie}
-                triggerClassName={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                })}
+                showDetailLink={false}
+                triggerClassName="home-ghost-button"
               />
-              <Link
-                href="/showtimes"
-                className={buttonVariants({ size: "lg" })}
-              >
-                Chọn suất chiếu <ArrowRightIcon data-icon="inline-end" />
-              </Link>
             </div>
           </div>
         </div>
@@ -93,13 +118,13 @@ export default async function MovieDetailPage({
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-border bg-surface p-5">
               <Clock3Icon className="mb-3 size-5 text-primary-bright" />
-              <p className="text-sm text-muted-foreground">Thời lượng</p>
-              <p className="font-semibold">{movie.durationMinutes} phút</p>
+              <p className="text-sm text-muted-foreground">Khởi chiếu</p>
+              <p className="font-semibold">{movie.releaseLabel}</p>
             </div>
             <div className="rounded-xl border border-border bg-surface p-5">
-              <MapPinIcon className="mb-3 size-5 text-primary-bright" />
-              <p className="text-sm text-muted-foreground">Thể loại</p>
-              <p className="font-semibold">{movie.genres.join(" · ")}</p>
+              <ClapperboardIcon className="mb-3 size-5 text-primary-bright" />
+              <p className="text-sm text-muted-foreground">Định dạng</p>
+              <p className="font-semibold">{movie.formats.join(" · ")}</p>
             </div>
           </div>
         </div>
@@ -135,9 +160,19 @@ export default async function MovieDetailPage({
                 Suất chiếu đang được cập nhật.
               </p>
             )}
-            <Link href="/showtimes">
-              <Button>Chọn suất chiếu</Button>
-            </Link>
+            {movie.status === "now-showing" ? (
+              <Link href={`/showtimes?movie=${movie.id}`}>
+                <Button className="gap-2 transition-transform hover:-translate-y-0.5">
+                  Chọn suất chiếu
+                  <ArrowRightIcon aria-hidden="true" />
+                </Button>
+              </Link>
+            ) : (
+              <Button className="w-fit gap-2" disabled>
+                Chọn suất chiếu
+                <ArrowRightIcon aria-hidden="true" />
+              </Button>
+            )}
           </div>
         </aside>
       </section>

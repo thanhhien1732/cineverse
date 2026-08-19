@@ -8,13 +8,17 @@ export interface Movie {
   readonly durationMinutes: number;
   readonly releaseLabel: string;
   readonly ratingLabel: string;
+  readonly scoreLabel: string;
+  readonly languageLabel?: string;
+  readonly accentColor: string;
   readonly genres: readonly string[];
   readonly formats: readonly string[];
   readonly tagline: string;
   readonly description: string;
   readonly posterPath: string;
   readonly backdropPath: string;
-  readonly trailerPath?: string;
+  /** Mã nhúng <iframe> YouTube dán từ trang admin. */
+  readonly trailerEmbedCode?: string;
 }
 
 export interface Cinema {

@@ -14,14 +14,6 @@ import { TrailerDialog } from "@/components/movies/trailer-dialog";
 import { Button } from "@/components/ui/button";
 import type { Movie } from "@/types/domain";
 
-const heroAccents: Readonly<Record<string, string>> = {
-  "minions-monsters": "#ffcf35",
-  "super-mario-galaxy": "#66c8ff",
-  "disclosure-day": "#70e1ff",
-  "the-odyssey": "#e59a5b",
-  "forgotten-island": "#76bc9c",
-};
-
 function getHeroTitleClass(title: string) {
   if (title.length >= 26) {
     return "is-extra-long";
@@ -78,7 +70,7 @@ export function HeroSwitcher({
       className="home-hero"
       style={
         {
-          "--hero-accent": heroAccents[movie.id] ?? "var(--primary-bright)",
+          "--hero-accent": movie.accentColor,
         } as CSSProperties
       }
     >

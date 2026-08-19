@@ -6,14 +6,16 @@ import { MenuIcon, TicketIcon, UserRoundIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useBookingStore } from "@/lib/stores/booking.store";
-import { useAuthStore } from "@/lib/stores/auth.store";
+import { useCurrentProfile, type AuthProfile } from "@/lib/stores/auth.store";
+import { getInitials, getLastName } from "@/lib/member";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const booking = useBookingStore((state) => state);
-  const isAuthenticated = Boolean(useAuthStore((state) => state.profile));
+  const profile = useCurrentProfile();
+  const isAuthenticated = Boolean(profile);
   const ticketDestination = booking.showtimeId
     ? booking.seatIds.length
       ? "/booking/combos"
@@ -68,9 +70,17 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="site-header-actions ml-auto hidden lg:flex">
-          <Link className="site-account-link" href="/auth">
-            <UserRoundIcon aria-hidden="true" className="size-[1.125rem]" />
-            <span>Tài khoản</span>
+          <Link
+            className={`site-account-link${isAuthenticated ? " is-authenticated" : ""}`}
+            href="/auth"
+            title={
+              profile
+                ? `Mở hồ sơ ${profile.fullName}`
+                : "Đăng nhập hoặc đăng ký"
+            }
+          >
+            <AccountAvatar profile={profile} />
+            <span>{profile ? getLastName(profile.fullName) : "Tài khoản"}</span>
           </Link>
           <Link className="site-ticket-link" href={destination}>
             <TicketIcon aria-hidden="true" className="size-[1.125rem]" />
@@ -87,11 +97,11 @@ export function SiteHeader() {
           </Link>
         </div>
         <Link
-          className="site-account-link site-account-link-compact lg:hidden"
+          className={`site-account-link site-account-link-compact lg:hidden${isAuthenticated ? " is-authenticated" : ""}`}
           href="/auth"
-          aria-label="Tài khoản"
+          aria-label={profile ? `Tài khoản: ${profile.fullName}` : "Tài khoản"}
         >
-          <UserRoundIcon className="size-5" />
+          <AccountAvatar profile={profile} />
         </Link>
         <button
           className="site-nav-toggle lg:hidden"
@@ -115,7 +125,9 @@ export function SiteHeader() {
               Trailers & video nổi bật
             </Link>
             <Link onClick={() => setOpen(false)} href="/auth">
-              Đăng nhập / Đăng ký
+              {profile
+                ? `Tài khoản: ${profile.fullName}`
+                : "Đăng nhập / Đăng ký"}
             </Link>
             <Link onClick={() => setOpen(false)} href={destination}>
               {booking.showtimeId ? "Tiếp tục đặt vé" : "Vé của tôi"}
@@ -125,4 +137,30 @@ export function SiteHeader() {
       ) : null}
     </header>
   );
+}
+
+function AccountAvatar({
+  profile,
+}: {
+  readonly profile: AuthProfile | null;
+}) {
+  if (profile?.avatarDataUrl) {
+    return (
+      <span className="site-account-avatar">
+        {/* Ảnh là data URL do người dùng tải lên nên không dùng next/image. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" className="site-account-avatar-image" src={profile.avatarDataUrl} />
+      </span>
+    );
+  }
+
+  if (profile) {
+    return (
+      <span className="site-account-avatar site-account-avatar-initials">
+        {getInitials(profile.fullName)}
+      </span>
+    );
+  }
+
+  return <UserRoundIcon aria-hidden="true" className="size-[1.125rem]" />;
 }

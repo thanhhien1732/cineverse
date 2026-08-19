@@ -3,11 +3,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useBookingStore } from "@/lib/stores/booking.store";
-import { useAuthStore } from "@/lib/stores/auth.store";
+import { useCurrentProfile } from "@/lib/stores/auth.store";
 export default function Page() {
   const router = useRouter();
   const tickets = useBookingStore((state) => state.tickets);
-  const profile = useAuthStore((state) => state.profile);
+  const profile = useCurrentProfile();
 
   useEffect(() => {
     if (!profile) {

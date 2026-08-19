@@ -7,12 +7,14 @@ type MovieFixture = Omit<
   | "description"
   | "posterPath"
   | "backdropPath"
-  | "trailerPath"
+  | "trailerEmbedCode"
   | "releaseLabel"
+  | "scoreLabel"
+  | "languageLabel"
+  | "accentColor"
 > & {
   readonly poster: string;
   readonly backdrop: string;
-  readonly trailer?: string;
 };
 const description =
   "Câu chuyện điện ảnh đưa khán giả vào một hành trình giàu cảm xúc, với những lựa chọn không thể đoán trước và một thế giới đáng để khám phá trên màn ảnh rộng.";
@@ -38,7 +40,6 @@ function movie(
     tagline,
     poster: `/assets/media/posters/${id}.webp`,
     backdrop: `/assets/media/backdrops/${id}.${backdropExtension}`,
-    trailer: `/assets/media/video/${id}.webm`,
   };
 }
 const fixtures: readonly MovieFixture[] = [
@@ -182,15 +183,59 @@ const releaseLabels: Readonly<Record<string, string>> = {
   "black-phone-2": "Sự kiện đặc biệt",
 };
 
+const scoreLabels: Readonly<Record<string, string>> = {
+  "minions-monsters": "8.7",
+  "super-mario-galaxy": "8.9",
+  "reminders-of-him": "8.4",
+  "you-me-tuscany": "8.2",
+  "disclosure-day": "Coming soon",
+  "the-odyssey": "Coming soon",
+  "forgotten-island": "Coming soon",
+  "focker-in-law": "Coming soon",
+  "one-night-only": "Coming soon",
+  "five-nights-at-freddys-2": "Special event",
+  "wicked-for-good": "Special event",
+  "black-phone-2": "Special event",
+};
+
+const languageLabel = "English · Vietnamese subtitles";
+
+/**
+ * Mã <iframe> YouTube dán từ trang admin dashboard (chưa build) khi thêm phim.
+ * Chỉ "minions-monsters" có sẵn để demo; các phim khác chưa có trailer.
+ */
+const trailerEmbedCodes: Readonly<Record<string, string>> = {
+  "minions-monsters":
+    '<iframe width="560" height="315" src="https://www.youtube.com/embed/ZSdOwt-G49w?si=iFpVtu1IoIpyJwz8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+};
+
+const accentColors: Readonly<Record<string, string>> = {
+  "minions-monsters": "#ffcf35",
+  "super-mario-galaxy": "#66c8ff",
+  "reminders-of-him": "#f39b76",
+  "you-me-tuscany": "#f6c08b",
+  "disclosure-day": "#70e1ff",
+  "the-odyssey": "#e59a5b",
+  "forgotten-island": "#76bc9c",
+  "focker-in-law": "#ffbd70",
+  "one-night-only": "#f77b78",
+  "five-nights-at-freddys-2": "#e64949",
+  "wicked-for-good": "#e991d8",
+  "black-phone-2": "#d97070",
+};
+
 const movies: readonly Movie[] = fixtures.map(
-  ({ poster, backdrop, trailer, ...value }) => ({
+  ({ poster, backdrop, ...value }) => ({
     ...value,
     releaseLabel: releaseLabels[value.id] ?? "Đang cập nhật",
+    scoreLabel: scoreLabels[value.id] ?? "Đang cập nhật",
+    languageLabel,
+    accentColor: accentColors[value.id] ?? "#8bd5ff",
     slug: value.id,
     description,
     posterPath: poster,
     backdropPath: backdrop,
-    trailerPath: trailer,
+    trailerEmbedCode: trailerEmbedCodes[value.id],
   }),
 );
 export const mockCatalogueRepository: CatalogueRepository = {

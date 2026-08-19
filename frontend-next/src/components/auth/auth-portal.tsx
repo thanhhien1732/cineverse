@@ -16,7 +16,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFeedback } from "@/components/feedback/feedback-provider";
-import { useAuthStore } from "@/lib/stores/auth.store";
+import { MemberProfile } from "@/components/auth/member-profile";
+import { useAuthStore, useCurrentProfile } from "@/lib/stores/auth.store";
 import { cn } from "@/lib/utils";
 
 type AuthTab = "login" | "register";
@@ -99,9 +100,9 @@ export function AuthPortal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
-  const profile = useAuthStore((state) => state.profile);
+  const profile = useCurrentProfile();
   const login = useAuthStore((state) => state.login);
-  const logout = useAuthStore((state) => state.logout);
+  const register = useAuthStore((state) => state.register);
   const [activeTab, setActiveTab] = useState<AuthTab>("login");
   const [values, setValues] = useState<GuestFormValues>(initialGuestForm);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -139,12 +140,26 @@ export function AuthPortal() {
       return;
     }
 
-    login({
-      fullName:
-        activeTab === "register" ? values.fullName.trim() : "Khách Cineverse",
-      email: values.email.trim(),
-      phone: activeTab === "register" ? values.phone.trim() : "Chưa cập nhật",
-    });
+    const result =
+      activeTab === "register"
+        ? register({
+            fullName: values.fullName,
+            email: values.email,
+            phone: values.phone,
+            dateOfBirth: values.dateOfBirth,
+            password: values.password,
+          })
+        : login({ email: values.email, password: values.password });
+
+    if (!result.ok) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [activeTab === "register" ? "email" : "password"]: result.error,
+      }));
+      notify(result.error ?? "Có lỗi xảy ra, vui lòng thử lại.", "error");
+      return;
+    }
+
     notify(
       activeTab === "register"
         ? "Tạo tài khoản thành công. Chào mừng bạn đến với CINEVERSE."
@@ -162,63 +177,7 @@ export function AuthPortal() {
       <section className="auth-page">
         <AuthHero />
         <div className="auth-section">
-          <div className="auth-layout profile-layout">
-            <aside className="auth-benefits">
-              <p className="auth-eyebrow">CINEVERSE MEMBER</p>
-              <h2>Trải nghiệm điện ảnh, theo cách của bạn.</h2>
-              <p className="auth-benefit-copy">
-                Thông tin bên dưới đang dùng mock state và sẽ được thay bằng API
-                tài khoản ở giai đoạn Backend.
-              </p>
-            </aside>
-            <form
-              className="auth-card auth-form-panel"
-              onSubmit={(event) => {
-                event.preventDefault();
-                notify("Đã cập nhật hồ sơ tài khoản.", "success");
-              }}
-            >
-              <div className="auth-form-heading">
-                <p className="auth-eyebrow">HỒ SƠ HỘI VIÊN</p>
-                <h2>Tài khoản của bạn</h2>
-                <p>Chỉnh sửa thông tin liên hệ cho các đơn hàng tiếp theo.</p>
-              </div>
-              <div className="auth-form-grid">
-                <label className="form-field form-field-wide">
-                  <span>Họ và tên</span>
-                  <Input defaultValue={profile.fullName} name="fullName" />
-                </label>
-                <label className="form-field">
-                  <span>Email</span>
-                  <Input
-                    defaultValue={profile.email}
-                    name="email"
-                    type="email"
-                  />
-                </label>
-                <label className="form-field">
-                  <span>Số điện thoại</span>
-                  <Input defaultValue={profile.phone} name="phone" type="tel" />
-                </label>
-              </div>
-              <Button className="w-full" type="submit">
-                Lưu thay đổi
-              </Button>
-              <Button
-                className="w-full"
-                onClick={() => {
-                  logout();
-                  setValues(initialGuestForm);
-                  setActiveTab("login");
-                  notify("Bạn đã đăng xuất khỏi tài khoản mock.", "success");
-                }}
-                type="button"
-                variant="outline"
-              >
-                Đăng xuất mock
-              </Button>
-            </form>
-          </div>
+          <MemberProfile nextPath={nextPath} profile={profile} />
         </div>
       </section>
     );
@@ -430,7 +389,9 @@ export function AuthPortal() {
                   </span>
                 </label>
               )}
-              <FieldError message={errors.acceptedTerms} />
+              {activeTab === "register" && (
+                <FieldError message={errors.acceptedTerms} />
+              )}
               <Button
                 className="h-12 w-full gap-2 px-4 text-sm font-extrabold uppercase tracking-[0.08em]"
                 type="submit"

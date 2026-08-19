@@ -19,10 +19,13 @@ export function TrailerDialog({
   movie,
   triggerClassName,
   onOpenChange,
+  showDetailLink = true,
 }: {
   readonly movie: Movie;
   readonly triggerClassName?: string;
   readonly onOpenChange?: (open: boolean) => void;
+  /** Ẩn khi dialog đã mở sẵn trên chính trang chi tiết của phim. */
+  readonly showDetailLink?: boolean;
 }) {
   return (
     <Dialog onOpenChange={(open) => onOpenChange?.(open)}>
@@ -56,15 +59,11 @@ export function TrailerDialog({
         >
           <XIcon />
         </DialogClose>
-        {movie.trailerPath ? (
-          <video
-            controls
-            className="home-preview-video aspect-video w-full bg-black"
-            poster={movie.backdropPath}
-            preload="metadata"
-          >
-            <source src={movie.trailerPath} type="video/webm" />
-          </video>
+        {movie.trailerEmbedCode ? (
+          <div
+            className="home-preview-video home-preview-embed aspect-video w-full bg-black"
+            dangerouslySetInnerHTML={{ __html: movie.trailerEmbedCode }}
+          />
         ) : (
           <div className="home-preview-image">
             <PlayIcon className="size-10" />
@@ -74,14 +73,16 @@ export function TrailerDialog({
           <p className="eyebrow">Featured preview</p>
           <h3>{movie.title}</h3>
           <p>
-            {movie.trailerPath
+            {movie.trailerEmbedCode
               ? "Khám phá video giới thiệu nổi bật của bộ phim."
               : "Khám phá những khung hình nổi bật và thông tin mới nhất của bộ phim."}
           </p>
-          <Link className="home-text-link" href={`/movies/${movie.id}`}>
-            Mở trang chi tiết
-            <ArrowRightIcon aria-hidden="true" />
-          </Link>
+          {showDetailLink ? (
+            <Link className="home-text-link" href={`/movies/${movie.id}`}>
+              Mở trang chi tiết
+              <ArrowRightIcon aria-hidden="true" />
+            </Link>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
