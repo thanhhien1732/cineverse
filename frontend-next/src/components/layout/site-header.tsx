@@ -83,7 +83,7 @@ export function SiteHeader() {
             <span>{profile ? getLastName(profile.fullName) : "Tài khoản"}</span>
           </Link>
           <Link className="site-ticket-link" href={destination}>
-            <TicketIcon aria-hidden="true" className="size-[1.125rem]" />
+            <TicketIcon aria-hidden="true" className="size-4.5" />
             <span>{booking.showtimeId ? "Đang đặt vé" : "Vé của tôi"}</span>
             <b
               className={
@@ -162,5 +162,5 @@ function AccountAvatar({
     );
   }
 
-  return <UserRoundIcon aria-hidden="true" className="size-[1.125rem]" />;
+  return <UserRoundIcon aria-hidden="true" className="size-4.5" />;
 }

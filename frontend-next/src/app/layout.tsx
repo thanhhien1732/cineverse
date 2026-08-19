@@ -5,10 +5,13 @@ import { AppShell } from "@/components/layout/app-shell";
 
 export const metadata: Metadata = {
   title: {
-    default: "Cineverse",
-    template: "%s | Cineverse",
+    default: "CINEVERSE",
+    template: "%s | CINEVERSE",
   },
   description: "A cinematic movie booking experience.",
+  icons: {
+    icon: "/assets/favicon.svg",
+  },
 };
 
 export default function RootLayout({
