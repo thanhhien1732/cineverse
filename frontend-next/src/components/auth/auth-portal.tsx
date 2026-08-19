@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  LockKeyholeIcon,
+  ArrowRightIcon,
   ShieldCheckIcon,
-  SparklesIcon,
+  StarIcon,
   TicketIcon,
 } from "lucide-react";
 import {
@@ -47,6 +47,8 @@ const initialGuestForm: GuestFormValues = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const vietnamesePhonePattern = /^(0|\+84)[0-9]{9,10}$/;
+
+const fieldInputClass = "h-12 rounded-[0.625rem] px-3 text-base";
 
 function validateGuestForm(values: GuestFormValues, tab: AuthTab): FormErrors {
   const errors: FormErrors = {};
@@ -235,14 +237,24 @@ export function AuthPortal() {
               Đúng chất riêng.
             </h2>
             <div className="auth-benefit-list">
-              <Benefit icon={<TicketIcon />} title="Vé điện tử">
+              <Benefit
+                icon={<TicketIcon className="size-5" />}
+                title="Vé điện tử"
+              >
                 Truy cập mã vé gần nhất ngay trong tài khoản hội viên.
               </Benefit>
-              <Benefit icon={<SparklesIcon />} title="Quyền lợi hội viên">
-                Nhận thông tin về suất chiếu đặc biệt và chương trình ưu đãi.
+              <Benefit
+                icon={<StarIcon className="size-5" />}
+                title="Quyền lợi hội viên"
+              >
+                Nhận thông tin về suất chiếu đặc biệt và các chương trình ưu
+                đãi.
               </Benefit>
-              <Benefit icon={<ShieldCheckIcon />} title="Hồ sơ cá nhân">
-                Quản lý thông tin liên hệ cho trải nghiệm tại rạp.
+              <Benefit
+                icon={<ShieldCheckIcon className="size-5" />}
+                title="Hồ sơ cá nhân"
+              >
+                Quản lý thông tin liên hệ và ảnh đại diện của bạn.
               </Benefit>
             </div>
           </aside>
@@ -300,6 +312,7 @@ export function AuthPortal() {
                     <Input
                       aria-invalid={Boolean(errors.fullName) || undefined}
                       autoComplete="name"
+                      className={fieldInputClass}
                       onChange={setTextField("fullName")}
                       placeholder="Nguyễn Văn An"
                       value={values.fullName}
@@ -312,6 +325,7 @@ export function AuthPortal() {
                   <Input
                     aria-invalid={Boolean(errors.email) || undefined}
                     autoComplete="email"
+                    className={fieldInputClass}
                     onChange={setTextField("email")}
                     placeholder="an@example.com"
                     type="email"
@@ -326,6 +340,7 @@ export function AuthPortal() {
                       <Input
                         aria-invalid={Boolean(errors.phone) || undefined}
                         autoComplete="tel"
+                        className={fieldInputClass}
                         inputMode="tel"
                         onChange={setTextField("phone")}
                         placeholder="0912345678"
@@ -339,6 +354,7 @@ export function AuthPortal() {
                       <Input
                         aria-invalid={Boolean(errors.dateOfBirth) || undefined}
                         autoComplete="bday"
+                        className={fieldInputClass}
                         max={new Date().toISOString().slice(0, 10)}
                         min="1900-01-01"
                         onChange={setTextField("dateOfBirth")}
@@ -349,7 +365,12 @@ export function AuthPortal() {
                     </label>
                   </>
                 )}
-                <label className="form-field">
+                <label
+                  className={cn(
+                    "form-field",
+                    activeTab === "login" && "form-field-wide",
+                  )}
+                >
                   <span>Mật khẩu</span>
                   <Input
                     aria-invalid={Boolean(errors.password) || undefined}
@@ -358,8 +379,13 @@ export function AuthPortal() {
                         ? "new-password"
                         : "current-password"
                     }
+                    className={fieldInputClass}
                     onChange={setTextField("password")}
-                    placeholder="Tối thiểu 6 ký tự"
+                    placeholder={
+                      activeTab === "register"
+                        ? "Tối thiểu 6 ký tự"
+                        : "Nhập mật khẩu"
+                    }
                     type="password"
                     value={values.password}
                   />
@@ -373,6 +399,7 @@ export function AuthPortal() {
                         Boolean(errors.confirmPassword) || undefined
                       }
                       autoComplete="new-password"
+                      className={fieldInputClass}
                       onChange={setTextField("confirmPassword")}
                       placeholder="Nhập lại mật khẩu"
                       type="password"
@@ -404,8 +431,12 @@ export function AuthPortal() {
                 </label>
               )}
               <FieldError message={errors.acceptedTerms} />
-              <Button className="w-full" type="submit">
+              <Button
+                className="h-12 w-full gap-2 px-4 text-sm font-extrabold uppercase tracking-[0.08em]"
+                type="submit"
+              >
                 {activeTab === "register" ? "Tạo tài khoản" : "Đăng nhập"}
+                <ArrowRightIcon data-icon="inline-end" />
               </Button>
               {activeTab === "login" && (
                 <p className="auth-helper">
@@ -436,11 +467,12 @@ function AuthHero() {
           </p>
         </div>
         <div className="auth-security-note">
-          <LockKeyholeIcon aria-hidden="true" className="size-6" />
+          <ShieldCheckIcon aria-hidden="true" className="size-7" />
           <div>
             <strong>BẢO MẬT HỘI VIÊN</strong>
             <p>
-              Thông tin cá nhân được bảo vệ và chỉ dùng cho dịch vụ CINEVERSE.
+              Chúng tôi cam kết thông tin cá nhân của bạn được bảo vệ và chỉ
+              được sử dụng cho các dịch vụ CINEVERSE.
             </p>
           </div>
         </div>

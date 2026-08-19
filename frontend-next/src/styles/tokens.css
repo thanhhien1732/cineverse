@@ -21,6 +21,7 @@
   --radius-sm: 0.5rem;
   --radius-lg: 1.125rem;
   --shadow-cinema: 0 1.25rem 4.375rem rgb(0 0 0 / 42%);
+  color-scheme: dark;
 }
 
 @theme inline {
