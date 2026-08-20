@@ -27,7 +27,9 @@ import { ShowtimeSummaryCard } from "@/components/booking/showtime-summary-card"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useFeedback } from "@/components/feedback/feedback-provider";
 import { resolveRatingCode } from "@/lib/age-rating";
+import { useCurrentProfile } from "@/lib/stores/auth.store";
 import { cn } from "@/lib/utils";
 import { distanceInKm, formatDistance } from "@/lib/geo";
 import {
@@ -833,6 +835,8 @@ export function ComboPicker({
   cinemas: readonly Cinema[];
 }) {
   const router = useRouter();
+  const { notify } = useFeedback();
+  const profile = useCurrentProfile();
   const quantities = useBookingStore((state) => state.comboQuantities);
   const setQuantity = useBookingStore((state) => state.setComboQuantity);
   const showtimeId = useBookingStore((state) => state.showtimeId);
@@ -944,7 +948,19 @@ export function ComboPicker({
         </section>
         <ComboSelectionSummary
           combos={combos}
-          onContinue={() => router.push("/booking/checkout")}
+          onContinue={() => {
+            /* Vé phát hành theo tài khoản, nên bước thanh toán yêu cầu đăng nhập. */
+            if (!profile) {
+              notify(
+                "Vui lòng đăng nhập để tiếp tục thanh toán đơn hàng.",
+                "error",
+              );
+              router.push("/auth?next=/booking/checkout");
+              return;
+            }
+
+            router.push("/booking/checkout");
+          }}
         />
       </div>
     </div>

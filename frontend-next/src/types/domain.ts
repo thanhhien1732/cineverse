@@ -82,6 +82,10 @@ export interface Ticket {
   readonly seatLabels: readonly string[];
   readonly comboQuantities: Readonly<Record<string, number>>;
   readonly total: number;
+  /** Số điểm CINEVERSE đã dùng cho đơn hàng này. */
+  readonly pointsRedeemed?: number;
+  /** Voucher sinh nhật đã dùng, để ví hội viên không tính lại. */
+  readonly voucherId?: string;
   readonly customerName: string;
   readonly customerEmail: string;
   readonly createdAt: string;

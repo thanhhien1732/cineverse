@@ -6,8 +6,12 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   CreditCardIcon,
+  GiftIcon,
   LockKeyholeIcon,
+  MailIcon,
+  PhoneIcon,
   QrCodeIcon,
   ShieldCheckIcon,
   TicketIcon,
@@ -25,6 +29,13 @@ import {
   showtimeGroupLabel,
   showtimeStartLabel,
 } from "@/lib/showtime-schedule";
+import {
+  calculateRewardTotals,
+  deriveMemberWallet,
+  POINT_VALUE,
+  type RewardSelection,
+} from "@/lib/member";
+import { useCurrentProfile } from "@/lib/stores/auth.store";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { resolveRatingCode } from "@/lib/age-rating";
 import { cn } from "@/lib/utils";
@@ -33,9 +44,6 @@ import type { Cinema, Combo, Movie, Ticket } from "@/types/domain";
 type PaymentMethod = "card" | "momo";
 
 interface CheckoutValues {
-  readonly fullName: string;
-  readonly email: string;
-  readonly phone: string;
   readonly cardNumber: string;
   readonly expiry: string;
   readonly cvv: string;
@@ -54,9 +62,6 @@ interface CheckoutFormProps {
 }
 
 const initialCheckoutValues: CheckoutValues = {
-  fullName: "",
-  email: "",
-  phone: "",
   cardNumber: "",
   expiry: "",
   cvv: "",
@@ -77,7 +82,6 @@ const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const vietnamesePhonePattern = /^(0|\+84)[0-9]{9,10}$/;
 
 function getSeatPrice(seatId: string) {
@@ -106,18 +110,6 @@ function validateCheckout(
   confirmedAgeEligibility: boolean,
 ): CheckoutErrors {
   const errors: CheckoutErrors = {};
-
-  if (values.fullName.trim().length < 2) {
-    errors.fullName = "Vui lòng nhập họ và tên hợp lệ.";
-  }
-
-  if (!emailPattern.test(values.email.trim())) {
-    errors.email = "Vui lòng nhập địa chỉ email hợp lệ.";
-  }
-
-  if (!vietnamesePhonePattern.test(values.phone.replace(/\s/g, ""))) {
-    errors.phone = "Vui lòng nhập số điện thoại Việt Nam hợp lệ.";
-  }
 
   if (paymentMethod === "card") {
     if (!/^\d{16}$/.test(values.cardNumber.replace(/\s/g, ""))) {
@@ -160,11 +152,16 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const router = useRouter();
   const { notify } = useFeedback();
   const booking = useBookingStore((state) => state);
+  const profile = useCurrentProfile();
   const [values, setValues] = useState<CheckoutValues>(initialCheckoutValues);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [errors, setErrors] = useState<CheckoutErrors>({});
+  const [rewardSelection, setRewardSelection] = useState<RewardSelection>({
+    pointsToRedeem: 0,
+    birthdayVoucherId: "",
+  });
   const [isMomoModalOpen, setIsMomoModalOpen] = useState(false);
   const [isConfirmingMomo, setIsConfirmingMomo] = useState(false);
 
@@ -208,7 +205,49 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
     [booking.comboQuantities, combos],
   );
   const voucherDiscount = voucherApplied ? Math.min(seatSubtotal, 20000) : 0;
-  const orderTotal = seatSubtotal + comboSubtotal - voucherDiscount;
+  const wallet = useMemo(
+    () =>
+      deriveMemberWallet(
+        booking.tickets,
+        profile?.dateOfBirth ?? "",
+        profile?.createdAt ?? new Date().toISOString(),
+      ),
+    [booking.tickets, profile?.createdAt, profile?.dateOfBirth],
+  );
+  /** Ghế đôi tính hai vé, nên giá mỗi vé là nửa giá ghế khi áp voucher. */
+  const admissionPrices = useMemo(
+    () =>
+      booking.seatIds.flatMap((seatId) =>
+        seatId.startsWith("J")
+          ? [getSeatPrice(seatId) / 2, getSeatPrice(seatId) / 2]
+          : [getSeatPrice(seatId)],
+      ),
+    [booking.seatIds],
+  );
+  const rewardTotals = useMemo(
+    () =>
+      calculateRewardTotals({
+        productSubtotal: Math.max(
+          0,
+          seatSubtotal + comboSubtotal - voucherDiscount,
+        ),
+        admissionPrices,
+        wallet,
+        selection: rewardSelection,
+      }),
+    [
+      admissionPrices,
+      comboSubtotal,
+      rewardSelection,
+      seatSubtotal,
+      voucherDiscount,
+      wallet,
+    ],
+  );
+  const orderTotal = Math.max(
+    0,
+    seatSubtotal + comboSubtotal - voucherDiscount - rewardTotals.rewardDiscount,
+  );
 
   const setField = (field: keyof CheckoutValues) => {
     return (event: ChangeEvent<HTMLInputElement>) => {
@@ -268,8 +307,10 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       seatLabels: booking.seatIds,
       comboQuantities: booking.comboQuantities,
       total: orderTotal,
-      customerName: values.fullName.trim(),
-      customerEmail: values.email.trim(),
+      pointsRedeemed: rewardTotals.pointsRedeemed,
+      voucherId: rewardTotals.voucherId,
+      customerName: profile?.fullName ?? "",
+      customerEmail: profile?.email ?? "",
       createdAt: new Date().toISOString(),
       status: "valid",
     };
@@ -303,6 +344,22 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
     issueTicket();
   };
 
+  if (!profile) {
+    return (
+      <section className="checkout-empty-state">
+        <UserRoundIcon aria-hidden="true" className="size-8 text-destructive" />
+        <h2>Cần đăng nhập để thanh toán</h2>
+        <p>
+          Vé điện tử được phát hành theo tài khoản CINEVERSE, vì vậy bạn cần
+          đăng nhập hoặc tạo tài khoản trước khi hoàn tất đơn hàng.
+        </p>
+        <Link href="/auth?next=/booking/checkout">
+          Đăng nhập / Đăng ký tài khoản
+        </Link>
+      </section>
+    );
+  }
+
   if (!booking.showtimeId || booking.seatIds.length === 0) {
     return (
       <section className="checkout-empty-state">
@@ -334,47 +391,116 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                 <UserRoundIcon aria-hidden="true" />
               </span>
               <div>
-                <h2>Thông tin liên hệ</h2>
-                <p>Vé điện tử sẽ được gửi đến email của bạn.</p>
+                <h2>Tài khoản đặt vé</h2>
               </div>
             </div>
-            <div className="checkout-form-grid">
-              <label className="form-field form-field-wide">
-                <span>Họ và tên</span>
-                <Input
-                  aria-invalid={Boolean(errors.fullName) || undefined}
-                  autoComplete="name"
-                  onChange={setField("fullName")}
-                  placeholder="Nguyễn Văn An"
-                  value={values.fullName}
-                />
-                <FieldError message={errors.fullName} />
-              </label>
+            <div className="checkout-account-card">
+              <div>
+                <strong>{profile.fullName}</strong>
+                <small className="account-contact account-contact-icons">
+                  <span>
+                    <MailIcon aria-hidden="true" />
+                    {profile.email}
+                  </span>
+                  <span>
+                    <PhoneIcon aria-hidden="true" />
+                    {profile.phone}
+                  </span>
+                </small>
+              </div>
+              <Link className="home-text-link" href="/auth?next=/booking/checkout">
+                Mở hồ sơ
+                <ArrowRightIcon aria-hidden="true" />
+              </Link>
+            </div>
+          </section>
+
+          <section className="checkout-form-section">
+            <div className="checkout-section-heading">
+              <span>
+                <GiftIcon aria-hidden="true" />
+              </span>
+              <div>
+                <h2>Quyền lợi hội viên</h2>
+                <p>Sử dụng điểm và voucher đang khả dụng cho đơn hàng này.</p>
+              </div>
+            </div>
+            <div className="rewards-wallet-card">
+              <div>
+                <small>HẠNG THÀNH VIÊN</small>
+                <strong>{wallet.tierLabel}</strong>
+              </div>
+              <div>
+                <small>ĐIỂM KHẢ DỤNG</small>
+                <strong>{wallet.pointsAvailable}</strong>
+              </div>
+              <div>
+                <small>QUY ĐỔI</small>
+                <strong>1 điểm = {money.format(POINT_VALUE)}</strong>
+              </div>
+            </div>
+            <div className="rewards-control-grid">
               <label className="form-field">
-                <span>Email nhận vé</span>
+                <span>Điểm sử dụng</span>
                 <Input
-                  aria-invalid={Boolean(errors.email) || undefined}
-                  autoComplete="email"
-                  onChange={setField("email")}
-                  placeholder="an@example.com"
-                  type="email"
-                  value={values.email}
+                  disabled={rewardTotals.maxPointsRedeemable === 0}
+                  inputMode="numeric"
+                  max={rewardTotals.maxPointsRedeemable}
+                  min={0}
+                  onChange={(event) => {
+                    const requested = Math.max(
+                      0,
+                      Math.floor(Number(event.target.value) || 0),
+                    );
+
+                    setRewardSelection((current) => ({
+                      ...current,
+                      pointsToRedeem: Math.min(
+                        requested,
+                        rewardTotals.maxPointsRedeemable,
+                      ),
+                    }));
+                  }}
+                  step={1}
+                  type="number"
+                  value={rewardTotals.pointsRedeemed}
                 />
-                <FieldError message={errors.email} />
+                <small className="reward-empty">
+                  Tối đa {rewardTotals.maxPointsRedeemable} điểm cho đơn hàng
+                  này. Điểm không quy đổi thành tiền mặt.
+                </small>
               </label>
-              <label className="form-field">
-                <span>Số điện thoại</span>
-                <Input
-                  aria-invalid={Boolean(errors.phone) || undefined}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  onChange={setField("phone")}
-                  placeholder="0912345678"
-                  type="tel"
-                  value={values.phone}
-                />
-                <FieldError message={errors.phone} />
-              </label>
+              <div className="voucher-selector">
+                <span>Voucher sinh nhật</span>
+                {wallet.vouchers.length ? (
+                  wallet.vouchers.map((voucher) => (
+                    <label className="voucher-option" key={voucher.id}>
+                      <input
+                        checked={
+                          rewardSelection.birthdayVoucherId === voucher.id
+                        }
+                        name="birthdayVoucher"
+                        onChange={(event) =>
+                          setRewardSelection((current) => ({
+                            ...current,
+                            birthdayVoucherId: event.target.checked
+                              ? voucher.id
+                              : "",
+                          }))
+                        }
+                        type="checkbox"
+                        value={voucher.id}
+                      />
+                      <span>
+                        <strong>{voucher.label}</strong>
+                        <small>Miễn phí 01 vé xem phim · Sử dụng 01 lần</small>
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="reward-empty">Hiện chưa có voucher khả dụng.</p>
+                )}
+              </div>
             </div>
           </section>
 
@@ -579,6 +705,9 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           combos={combos}
           comboQuantities={booking.comboQuantities}
           seatIds={booking.seatIds}
+          birthdayVoucherDiscount={rewardTotals.voucherDiscount}
+          pointsDiscount={rewardTotals.pointsDiscount}
+          pointsRedeemed={rewardTotals.pointsRedeemed}
           seatSubtotal={seatSubtotal}
           total={orderTotal}
           voucherDiscount={voucherDiscount}
@@ -650,6 +779,9 @@ function CheckoutOrderSummary({
   seatSubtotal,
   comboSubtotal,
   voucherDiscount,
+  birthdayVoucherDiscount,
+  pointsDiscount,
+  pointsRedeemed,
   total,
 }: {
   readonly combos: readonly Combo[];
@@ -658,6 +790,9 @@ function CheckoutOrderSummary({
   readonly seatSubtotal: number;
   readonly comboSubtotal: number;
   readonly voucherDiscount: number;
+  readonly birthdayVoucherDiscount: number;
+  readonly pointsDiscount: number;
+  readonly pointsRedeemed: number;
   readonly total: number;
 }) {
   const comboLines = combos
@@ -709,6 +844,18 @@ function CheckoutOrderSummary({
           <div className="summary-discount">
             <dt>Voucher CINE20</dt>
             <dd>- {money.format(voucherDiscount)}</dd>
+          </div>
+        )}
+        {birthdayVoucherDiscount > 0 && (
+          <div className="summary-discount">
+            <dt>Voucher sinh nhật</dt>
+            <dd>- {money.format(birthdayVoucherDiscount)}</dd>
+          </div>
+        )}
+        {pointsDiscount > 0 && (
+          <div className="summary-discount">
+            <dt>Điểm CINEVERSE ({pointsRedeemed})</dt>
+            <dd>- {money.format(pointsDiscount)}</dd>
           </div>
         )}
         <div className="summary-total">

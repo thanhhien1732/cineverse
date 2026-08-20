@@ -2,6 +2,9 @@ import type { Ticket } from "@/types/domain";
 
 export const POINT_EARN_DIVISOR = 10000;
 
+/** Mỗi điểm CINEVERSE quy đổi được 1.000 ₫ khi thanh toán. */
+export const POINT_VALUE = 1000;
+
 export interface MemberTier {
   readonly code: string;
   readonly label: string;
@@ -177,8 +180,19 @@ export function deriveMemberWallet(
     (total, purchase) => total + purchase.earnedPoints,
     0,
   );
+  const pointsRedeemed = tickets.reduce(
+    (total, ticket) => total + (ticket.pointsRedeemed ?? 0),
+    0,
+  );
+  const usedVoucherIds = new Set(
+    tickets
+      .map((ticket) => ticket.voucherId)
+      .filter((voucherId): voucherId is string => Boolean(voucherId)),
+  );
 
-  const vouchers = getBirthdayVouchers(dateOfBirth, createdAt);
+  const vouchers = getBirthdayVouchers(dateOfBirth, createdAt).filter(
+    (voucher) => !usedVoucherIds.has(voucher.id),
+  );
 
   const transactions: MemberTransaction[] = [
     ...vouchers.map((voucher) => ({
@@ -193,17 +207,74 @@ export function deriveMemberWallet(
       label: `Mua vé ${purchase.ticket.code}`,
       createdAt: purchase.ticket.createdAt,
       earnedPoints: purchase.earnedPoints,
+      redeemedPoints: purchase.ticket.pointsRedeemed,
     })),
   ].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   return {
-    pointsAvailable: lifetimePoints,
+    pointsAvailable: Math.max(0, lifetimePoints - pointsRedeemed),
     lifetimePoints,
     tierLabel: getTierForLifetimePoints(lifetimePoints).label,
     vouchers,
     transactions,
+  };
+}
+
+export interface RewardSelection {
+  readonly pointsToRedeem: number;
+  readonly birthdayVoucherId: string;
+}
+
+export interface RewardTotals {
+  /** Voucher sinh nhật thực sự áp dụng được, rỗng nếu lựa chọn đã hết hiệu lực. */
+  readonly voucherId: string;
+  readonly voucherDiscount: number;
+  readonly pointsRedeemed: number;
+  readonly pointsDiscount: number;
+  readonly maxPointsRedeemable: number;
+  readonly rewardDiscount: number;
+}
+
+/**
+ * Quy đổi quyền lợi hội viên cho một đơn hàng, giữ đúng công thức của frontend
+ * legacy: voucher sinh nhật miễn phí vé đắt nhất, phần còn lại mới trừ điểm.
+ */
+export function calculateRewardTotals({
+  productSubtotal,
+  admissionPrices,
+  wallet,
+  selection,
+}: {
+  readonly productSubtotal: number;
+  readonly admissionPrices: readonly number[];
+  readonly wallet: MemberWallet;
+  readonly selection: RewardSelection;
+}): RewardTotals {
+  const voucher = wallet.vouchers.find(
+    (item) => item.id === selection.birthdayVoucherId,
+  );
+  const voucherDiscount =
+    voucher && admissionPrices.length ? Math.max(...admissionPrices) : 0;
+  const redeemableAfterVoucher = Math.max(0, productSubtotal - voucherDiscount);
+  const maxPointsRedeemable = Math.min(
+    wallet.pointsAvailable,
+    Math.floor(redeemableAfterVoucher / POINT_VALUE),
+  );
+  const pointsRedeemed = Math.min(
+    Math.max(0, Math.floor(selection.pointsToRedeem)),
+    maxPointsRedeemable,
+  );
+  const pointsDiscount = pointsRedeemed * POINT_VALUE;
+
+  return {
+    voucherId: voucher?.id ?? "",
+    voucherDiscount,
+    pointsRedeemed,
+    pointsDiscount,
+    maxPointsRedeemable,
+    rewardDiscount: voucherDiscount + pointsDiscount,
   };
 }
 
