@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   ArrowLeftIcon,
-  ArrowRightIcon,
   CreditCardIcon,
   GiftIcon,
   LockKeyholeIcon,
@@ -33,7 +32,6 @@ import {
   calculateRewardTotals,
   deriveMemberWallet,
   POINT_VALUE,
-  type RewardSelection,
 } from "@/lib/member";
 import { useCurrentProfile } from "@/lib/stores/auth.store";
 import { useBookingStore } from "@/lib/stores/booking.store";
@@ -158,10 +156,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [errors, setErrors] = useState<CheckoutErrors>({});
-  const [rewardSelection, setRewardSelection] = useState<RewardSelection>({
-    pointsToRedeem: 0,
-    birthdayVoucherId: "",
-  });
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [isMomoModalOpen, setIsMomoModalOpen] = useState(false);
   const [isConfirmingMomo, setIsConfirmingMomo] = useState(false);
 
@@ -214,16 +209,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       ),
     [booking.tickets, profile?.createdAt, profile?.dateOfBirth],
   );
-  /** Ghế đôi tính hai vé, nên giá mỗi vé là nửa giá ghế khi áp voucher. */
-  const admissionPrices = useMemo(
-    () =>
-      booking.seatIds.flatMap((seatId) =>
-        seatId.startsWith("J")
-          ? [getSeatPrice(seatId) / 2, getSeatPrice(seatId) / 2]
-          : [getSeatPrice(seatId)],
-      ),
-    [booking.seatIds],
-  );
   const rewardTotals = useMemo(
     () =>
       calculateRewardTotals({
@@ -231,18 +216,10 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           0,
           seatSubtotal + comboSubtotal - voucherDiscount,
         ),
-        admissionPrices,
         wallet,
-        selection: rewardSelection,
+        pointsToRedeem,
       }),
-    [
-      admissionPrices,
-      comboSubtotal,
-      rewardSelection,
-      seatSubtotal,
-      voucherDiscount,
-      wallet,
-    ],
+    [comboSubtotal, pointsToRedeem, seatSubtotal, voucherDiscount, wallet],
   );
   const orderTotal = Math.max(
     0,
@@ -308,7 +285,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       comboQuantities: booking.comboQuantities,
       total: orderTotal,
       pointsRedeemed: rewardTotals.pointsRedeemed,
-      voucherId: rewardTotals.voucherId,
       customerName: profile?.fullName ?? "",
       customerEmail: profile?.email ?? "",
       createdAt: new Date().toISOString(),
@@ -408,10 +384,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                   </span>
                 </small>
               </div>
-              <Link className="home-text-link" href="/auth?next=/booking/checkout">
-                Mở hồ sơ
-                <ArrowRightIcon aria-hidden="true" />
-              </Link>
             </div>
           </section>
 
@@ -422,7 +394,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               </span>
               <div>
                 <h2>Quyền lợi hội viên</h2>
-                <p>Sử dụng điểm và voucher đang khả dụng cho đơn hàng này.</p>
               </div>
             </div>
             <div className="rewards-wallet-card">
@@ -453,13 +424,9 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                       Math.floor(Number(event.target.value) || 0),
                     );
 
-                    setRewardSelection((current) => ({
-                      ...current,
-                      pointsToRedeem: Math.min(
-                        requested,
-                        rewardTotals.maxPointsRedeemable,
-                      ),
-                    }));
+                    setPointsToRedeem(
+                      Math.min(requested, rewardTotals.maxPointsRedeemable),
+                    );
                   }}
                   step={1}
                   type="number"
@@ -470,37 +437,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                   này. Điểm không quy đổi thành tiền mặt.
                 </small>
               </label>
-              <div className="voucher-selector">
-                <span>Voucher sinh nhật</span>
-                {wallet.vouchers.length ? (
-                  wallet.vouchers.map((voucher) => (
-                    <label className="voucher-option" key={voucher.id}>
-                      <input
-                        checked={
-                          rewardSelection.birthdayVoucherId === voucher.id
-                        }
-                        name="birthdayVoucher"
-                        onChange={(event) =>
-                          setRewardSelection((current) => ({
-                            ...current,
-                            birthdayVoucherId: event.target.checked
-                              ? voucher.id
-                              : "",
-                          }))
-                        }
-                        type="checkbox"
-                        value={voucher.id}
-                      />
-                      <span>
-                        <strong>{voucher.label}</strong>
-                        <small>Miễn phí 01 vé xem phim · Sử dụng 01 lần</small>
-                      </span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="reward-empty">Hiện chưa có voucher khả dụng.</p>
-                )}
-              </div>
             </div>
           </section>
 
@@ -511,7 +447,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               </span>
               <div>
                 <h2>Voucher ưu đãi</h2>
-                <p>Nhập mã khuyến mãi để cập nhật tổng thanh toán ngay.</p>
               </div>
             </div>
             <div className="voucher-input-row">
@@ -527,7 +462,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                 Áp dụng
               </Button>
             </div>
-            <p
+            {/* <p
               className={
                 voucherApplied ? "voucher-status is-applied" : "voucher-status"
               }
@@ -535,7 +470,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               {voucherApplied
                 ? "Voucher CINE20 đang được áp dụng."
                 : "Mock voucher: CINE20 giảm tối đa 20.000 ₫."}
-            </p>
+            </p> */}
           </section>
 
           <section className="checkout-form-section">
@@ -545,7 +480,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               </span>
               <div>
                 <h2>Phương thức thanh toán</h2>
-                <p>Chọn thẻ nội địa hoặc xác nhận giao dịch qua MoMo.</p>
               </div>
             </div>
             <div className="payment-options">
@@ -705,7 +639,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           combos={combos}
           comboQuantities={booking.comboQuantities}
           seatIds={booking.seatIds}
-          birthdayVoucherDiscount={rewardTotals.voucherDiscount}
           pointsDiscount={rewardTotals.pointsDiscount}
           pointsRedeemed={rewardTotals.pointsRedeemed}
           seatSubtotal={seatSubtotal}
@@ -779,7 +712,6 @@ function CheckoutOrderSummary({
   seatSubtotal,
   comboSubtotal,
   voucherDiscount,
-  birthdayVoucherDiscount,
   pointsDiscount,
   pointsRedeemed,
   total,
@@ -790,7 +722,6 @@ function CheckoutOrderSummary({
   readonly seatSubtotal: number;
   readonly comboSubtotal: number;
   readonly voucherDiscount: number;
-  readonly birthdayVoucherDiscount: number;
   readonly pointsDiscount: number;
   readonly pointsRedeemed: number;
   readonly total: number;
@@ -844,12 +775,6 @@ function CheckoutOrderSummary({
           <div className="summary-discount">
             <dt>Voucher CINE20</dt>
             <dd>- {money.format(voucherDiscount)}</dd>
-          </div>
-        )}
-        {birthdayVoucherDiscount > 0 && (
-          <div className="summary-discount">
-            <dt>Voucher sinh nhật</dt>
-            <dd>- {money.format(birthdayVoucherDiscount)}</dd>
           </div>
         )}
         {pointsDiscount > 0 && (

@@ -184,15 +184,7 @@ export function deriveMemberWallet(
     (total, ticket) => total + (ticket.pointsRedeemed ?? 0),
     0,
   );
-  const usedVoucherIds = new Set(
-    tickets
-      .map((ticket) => ticket.voucherId)
-      .filter((voucherId): voucherId is string => Boolean(voucherId)),
-  );
-
-  const vouchers = getBirthdayVouchers(dateOfBirth, createdAt).filter(
-    (voucher) => !usedVoucherIds.has(voucher.id),
-  );
+  const vouchers = getBirthdayVouchers(dateOfBirth, createdAt);
 
   const transactions: MemberTransaction[] = [
     ...vouchers.map((voucher) => ({
@@ -222,15 +214,7 @@ export function deriveMemberWallet(
   };
 }
 
-export interface RewardSelection {
-  readonly pointsToRedeem: number;
-  readonly birthdayVoucherId: string;
-}
-
 export interface RewardTotals {
-  /** Voucher sinh nhật thực sự áp dụng được, rỗng nếu lựa chọn đã hết hiệu lực. */
-  readonly voucherId: string;
-  readonly voucherDiscount: number;
   readonly pointsRedeemed: number;
   readonly pointsDiscount: number;
   readonly maxPointsRedeemable: number;
@@ -238,43 +222,33 @@ export interface RewardTotals {
 }
 
 /**
- * Quy đổi quyền lợi hội viên cho một đơn hàng, giữ đúng công thức của frontend
- * legacy: voucher sinh nhật miễn phí vé đắt nhất, phần còn lại mới trừ điểm.
+ * Quy đổi điểm CINEVERSE cho một đơn hàng: mỗi điểm trừ `POINT_VALUE`, nhưng
+ * không vượt quá số điểm khả dụng lẫn giá trị còn lại của đơn.
  */
 export function calculateRewardTotals({
   productSubtotal,
-  admissionPrices,
   wallet,
-  selection,
+  pointsToRedeem,
 }: {
   readonly productSubtotal: number;
-  readonly admissionPrices: readonly number[];
   readonly wallet: MemberWallet;
-  readonly selection: RewardSelection;
+  readonly pointsToRedeem: number;
 }): RewardTotals {
-  const voucher = wallet.vouchers.find(
-    (item) => item.id === selection.birthdayVoucherId,
-  );
-  const voucherDiscount =
-    voucher && admissionPrices.length ? Math.max(...admissionPrices) : 0;
-  const redeemableAfterVoucher = Math.max(0, productSubtotal - voucherDiscount);
   const maxPointsRedeemable = Math.min(
     wallet.pointsAvailable,
-    Math.floor(redeemableAfterVoucher / POINT_VALUE),
+    Math.floor(Math.max(0, productSubtotal) / POINT_VALUE),
   );
   const pointsRedeemed = Math.min(
-    Math.max(0, Math.floor(selection.pointsToRedeem)),
+    Math.max(0, Math.floor(pointsToRedeem)),
     maxPointsRedeemable,
   );
   const pointsDiscount = pointsRedeemed * POINT_VALUE;
 
   return {
-    voucherId: voucher?.id ?? "",
-    voucherDiscount,
     pointsRedeemed,
     pointsDiscount,
     maxPointsRedeemable,
-    rewardDiscount: voucherDiscount + pointsDiscount,
+    rewardDiscount: pointsDiscount,
   };
 }
 

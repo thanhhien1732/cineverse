@@ -1856,12 +1856,7 @@
   .checkout-section-heading h2 {
     margin: 0;
     font-size: 1.25rem;
-  }
-
-  .checkout-section-heading p {
-    margin: 0.3125rem 0 0;
-    color: var(--muted);
-    font-size: 0.8rem;
+    font-weight: 700;
   }
 
   .checkout-account-card {
@@ -1900,10 +1895,21 @@
   }
 
   .account-contact-icons svg {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 1em;
+    height: 1em;
     flex: 0 0 auto;
     opacity: 0.58;
+  }
+
+  .account-contact span+span {
+    gap: 0.5rem;
+  }
+
+  .account-contact span+span::before {
+    content: "";
+    width: 1px;
+    height: 0.85em;
+    background: rgb(255 255 255 / 22%);
   }
 
   .rewards-wallet-card {
@@ -1936,43 +1942,11 @@
 
   .rewards-control-grid {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-columns: minmax(0, 26rem);
     gap: 0.875rem;
     margin-top: 0.875rem;
   }
 
-  .voucher-selector {
-    display: grid;
-    align-content: start;
-    gap: 0.4375rem;
-  }
-
-  .voucher-selector>span {
-    color: var(--foreground-muted);
-    font-size: 0.76rem;
-    font-weight: 700;
-  }
-
-  .voucher-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5625rem;
-    padding: 0.6875rem;
-    border: 1px solid rgb(255 191 105 / 30%);
-    border-radius: 0.625rem;
-    background: rgb(255 191 105 / 6%);
-  }
-
-  .voucher-option input {
-    margin-top: 0.1875rem;
-  }
-
-  .voucher-option span {
-    display: grid;
-    gap: 0.1875rem;
-  }
-
-  .voucher-option small,
   .reward-empty {
     margin: 0;
     color: var(--muted);
@@ -1986,15 +1960,15 @@
     gap: 0.625rem;
   }
 
-  .voucher-status {
+  /* .voucher-status {
     margin: 0.625rem 0 0;
     color: var(--muted);
     font-size: 0.72rem;
-  }
+  } */
 
-  .voucher-status.is-applied {
+  /* .voucher-status.is-applied {
     color: var(--success);
-  }
+  } */
 
   .payment-options {
     display: grid;
@@ -2255,7 +2229,7 @@
     }
 
     .rewards-control-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
