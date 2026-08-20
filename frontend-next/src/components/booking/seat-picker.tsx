@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BookingSteps } from "@/components/booking/booking-flow";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
+import { usePanZoom } from "@/lib/use-pan-zoom";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
 import type { Seat } from "@/types/domain";
@@ -81,7 +82,7 @@ const reservedSeatIds = new Set([
   "J9-J10",
 ]);
 const maximumSeatSelection = 8;
-const minSeatMapZoom = 0.6;
+const minSeatMapZoom = 1;
 const maxSeatMapZoom = 2;
 const baseSeatPrice = 95000;
 
@@ -207,37 +208,21 @@ export function SeatPicker({
   const clearSeats = useBookingStore((state) => state.clearSeats);
   const [expired, setExpired] = useState(false);
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const seatMapShellRef = useRef<HTMLDivElement>(null);
+  const {
+    containerRef: seatMapRef,
+    contentRef: seatMapContentRef,
+    contentHeight: seatMapHeight,
+    zoom,
+    offset,
+    isPanning,
+    reset: resetSeatMapView,
+    containerProps: seatMapProps,
+  } = usePanZoom({ minZoom: minSeatMapZoom, maxZoom: maxSeatMapZoom });
 
   /** Giữ lại phim đang đặt để quay về đúng bước chọn suất chiếu của phim đó. */
   const showtimesHref = movieId
     ? `/showtimes?movie=${encodeURIComponent(movieId)}`
     : "/showtimes";
-
-  /**
-   * React đăng ký onWheel dưới dạng passive nên preventDefault() không có
-   * tác dụng — phải gắn listener gốc để chặn cuộn trang khi zoom sơ đồ ghế.
-   */
-  useEffect(() => {
-    const shell = seatMapShellRef.current;
-    if (!shell) {
-      return;
-    }
-
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      setZoom((current) =>
-        Math.min(
-          maxSeatMapZoom,
-          Math.max(minSeatMapZoom, current - event.deltaY * 0.0015),
-        ),
-      );
-    };
-
-    shell.addEventListener("wheel", handleWheel, { passive: false });
-    return () => shell.removeEventListener("wheel", handleWheel);
-  }, []);
 
   const handleExpire = useCallback(() => {
     clearSeats();
@@ -336,19 +321,27 @@ export function SeatPicker({
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section>
-          <div className="seat-map-shell" ref={seatMapShellRef}>
-            {zoom !== 1 && (
+          <div
+            className={cn("seat-map-shell", isPanning && "is-panning")}
+            ref={seatMapRef}
+            style={{ height: seatMapHeight }}
+            {...seatMapProps}
+          >
+            {zoom !== minSeatMapZoom && (
               <button
                 type="button"
                 className="seat-map-zoom-badge"
-                onClick={() => setZoom(1)}
+                onClick={resetSeatMapView}
               >
                 {Math.round(zoom * 100)}%
               </button>
             )}
             <div
               className="seat-map-zoom"
-              style={{ transform: `scale(${zoom})` }}
+              ref={seatMapContentRef}
+              style={{
+                transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+              }}
             >
               <div className="screen">
                 <span>MÀN HÌNH</span>

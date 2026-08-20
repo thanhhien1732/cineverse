@@ -176,23 +176,32 @@
 
   .seat-map-shell {
     position: relative;
-    overflow: auto;
-    max-height: 37.5rem;
-    padding: 1.75rem 0.875rem 1.875rem;
+    overflow: hidden;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: rgb(10 15 26 / 74%);
+    cursor: grab;
+    /* Tự xử lý mọi cử chỉ chạm để chụm hai ngón zoom được trên cảm ứng. */
+    touch-action: none;
+  }
+
+  .seat-map-shell.is-panning {
+    cursor: grabbing;
   }
 
   .seat-map-zoom {
-    transform-origin: top center;
+    width: max-content;
+    min-width: 100%;
+    padding: 1.75rem 0.875rem 1.875rem;
+    transform-origin: 0 0;
+    will-change: transform;
   }
 
   .seat-map-zoom-badge {
-    position: sticky;
+    position: absolute;
     z-index: 1;
-    top: 0.625rem;
-    float: right;
+    top: 0.75rem;
+    right: 0.75rem;
     padding: 0.25rem 0.625rem;
     border: 1px solid rgb(112 127 255 / 56%);
     border-radius: 999px;
