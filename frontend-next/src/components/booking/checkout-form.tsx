@@ -12,6 +12,10 @@ import {
   TicketIcon,
   UserRoundIcon,
 } from "lucide-react";
+import {
+  ageRestrictionPolicies,
+  ratingAliases,
+} from "@/components/booking/age-restriction-modal";
 import { BookingSteps } from "@/components/booking/booking-flow";
 import { AppModal } from "@/components/feedback/app-modal";
 import { useFeedback } from "@/components/feedback/feedback-provider";
@@ -59,6 +63,24 @@ const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   maximumFractionDigits: 0,
+});
+
+/** Phí dịch vụ tính trên mỗi vé — giống bảng giá của frontend legacy. */
+const serviceFeePerSeat = 5000;
+
+const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
+  weekday: "short",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+const checkoutTime = new Intl.DateTimeFormat("vi-VN", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Ho_Chi_Minh",
 });
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -155,6 +177,9 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const selectedMovie = movies.find((movie) => movie.id === booking.movieId);
   const selectedShowtime =
     resolveShowtimeById(booking.showtimeId, cinemas) ?? undefined;
+  const selectedCinema = cinemas.find(
+    (cinema) => cinema.id === selectedShowtime?.cinemaId,
+  );
   const seatSubtotal = useMemo(
     () =>
       booking.seatIds.reduce(
@@ -172,8 +197,10 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       ),
     [booking.comboQuantities, combos],
   );
+  const serviceFee = getAdmissionCount(booking.seatIds) * serviceFeePerSeat;
   const voucherDiscount = voucherApplied ? Math.min(seatSubtotal, 20000) : 0;
-  const orderTotal = seatSubtotal + comboSubtotal - voucherDiscount;
+  const orderTotal =
+    seatSubtotal + comboSubtotal + serviceFee - voucherDiscount;
 
   const setField = (field: keyof CheckoutValues) => {
     return (event: ChangeEvent<HTMLInputElement>) => {
@@ -534,8 +561,10 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           comboSubtotal={comboSubtotal}
           combos={combos}
           comboQuantities={booking.comboQuantities}
+          cinema={selectedCinema}
           movie={selectedMovie}
           seatIds={booking.seatIds}
+          serviceFee={serviceFee}
           seatSubtotal={seatSubtotal}
           showtime={selectedShowtime}
           total={orderTotal}
@@ -603,25 +632,39 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
 
 function CheckoutOrderSummary({
   movie,
+  cinema,
   showtime,
   combos,
   comboQuantities,
   seatIds,
   seatSubtotal,
   comboSubtotal,
+  serviceFee,
   voucherDiscount,
   total,
 }: {
   readonly movie?: Movie;
+  readonly cinema?: Cinema;
   readonly showtime?: Showtime;
   readonly combos: readonly Combo[];
   readonly comboQuantities: Readonly<Record<string, number>>;
   readonly seatIds: readonly string[];
   readonly seatSubtotal: number;
   readonly comboSubtotal: number;
+  readonly serviceFee: number;
   readonly voucherDiscount: number;
   readonly total: number;
 }) {
+  const normalizedRating = movie
+    ? (ratingAliases[movie.ratingLabel] ?? movie.ratingLabel)
+    : "P";
+  const policy =
+    ageRestrictionPolicies[normalizedRating] ?? ageRestrictionPolicies.P;
+  const showtimeStart = showtime ? new Date(showtime.startsAt) : undefined;
+  const comboLines = combos
+    .map((combo) => ({ combo, quantity: comboQuantities[combo.id] ?? 0 }))
+    .filter((line) => line.quantity > 0);
+
   return (
     <aside className="checkout-summary-panel">
       <div className="checkout-movie">
@@ -636,17 +679,34 @@ function CheckoutOrderSummary({
         <div>
           <p className="auth-eyebrow">ĐƠN HÀNG CỦA BẠN</p>
           <h2>{movie?.title ?? "CINEVERSE"}</h2>
-          <p>
-            {showtime
-              ? new Intl.DateTimeFormat("vi-VN", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }).format(new Date(showtime.startsAt))
-              : "Chưa chọn suất chiếu"}
-          </p>
+          <p>{cinema?.name ?? "Chưa chọn rạp"}</p>
         </div>
       </div>
       <dl className="checkout-summary-list">
+        <div>
+          <dt>Phân loại</dt>
+          <dd>
+            <span className="rating-badge">{policy.code}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Ngày</dt>
+          <dd>
+            {showtimeStart ? checkoutDate.format(showtimeStart) : "Chưa chọn"}
+          </dd>
+        </div>
+        <div>
+          <dt>Suất chiếu</dt>
+          <dd>
+            {showtimeStart && showtime
+              ? `${checkoutTime.format(showtimeStart)} · ${showtime.format}`
+              : "Chưa chọn"}
+          </dd>
+        </div>
+        <div>
+          <dt>Phòng chiếu</dt>
+          <dd>{showtime?.hall ?? "Chưa chọn"}</dd>
+        </div>
         <div>
           <dt>Ghế</dt>
           <dd>{seatIds.join(", ")}</dd>
@@ -655,6 +715,21 @@ function CheckoutOrderSummary({
           <dt>Số vé</dt>
           <dd>{getAdmissionCount(seatIds)}</dd>
         </div>
+      </dl>
+      {comboLines.length > 0 && (
+        <div className="checkout-lines">
+          <h4>Combo bắp nước</h4>
+          {comboLines.map((line) => (
+            <p key={line.combo.id}>
+              <span>
+                {line.quantity} × {line.combo.name}
+              </span>
+              <b>{money.format(line.combo.unitPrice * line.quantity)}</b>
+            </p>
+          ))}
+        </div>
+      )}
+      <dl className="checkout-summary-list checkout-totals">
         <div>
           <dt>Tiền vé</dt>
           <dd>{money.format(seatSubtotal)}</dd>
@@ -663,20 +738,10 @@ function CheckoutOrderSummary({
           <dt>Combo</dt>
           <dd>{money.format(comboSubtotal)}</dd>
         </div>
-        {combos
-          .filter((combo) => (comboQuantities[combo.id] ?? 0) > 0)
-          .map((combo) => (
-            <div className="checkout-combo-line" key={combo.id}>
-              <dt>
-                {comboQuantities[combo.id]} × {combo.name}
-              </dt>
-              <dd>
-                {money.format(
-                  combo.unitPrice * (comboQuantities[combo.id] ?? 0),
-                )}
-              </dd>
-            </div>
-          ))}
+        <div>
+          <dt>Phí dịch vụ</dt>
+          <dd>{money.format(serviceFee)}</dd>
+        </div>
         {voucherDiscount > 0 && (
           <div className="summary-discount">
             <dt>Voucher CINE20</dt>

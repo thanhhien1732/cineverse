@@ -334,6 +334,10 @@ const fullDate = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
+/** Nút tròn tăng/giảm số lượng combo, sáng xanh khi rê chuột như bản legacy. */
+const comboQuantityButton =
+  "rounded-full hover:border-primary/70 hover:bg-primary/15 hover:text-foreground";
+
 /** Định dạng ngày trên thẻ suất chiếu, khớp với bước chọn ghế. */
 const showtimeCardDate = new Intl.DateTimeFormat("vi-VN", {
   weekday: "short",
@@ -734,6 +738,11 @@ function ComboSelectionSummary({
   const seatIds = useBookingStore((state) => state.seatIds);
   const comboQuantities = useBookingStore((state) => state.comboQuantities);
 
+  /** Ghế đã chọn ở bước trước, hiển thị lại để khách đối chiếu trước khi thanh toán. */
+  const chosenSeats = seatIds
+    .map((id) => seatPlan.find((seat) => seat.id === id))
+    .filter((seat): seat is SeatMapItem => seat !== undefined);
+
   const seatSubtotal = seatIds.reduce(
     (total, id) =>
       total +
@@ -764,6 +773,18 @@ function ComboSelectionSummary({
             {seatIds.length} ghế đã chọn
           </p>
         </div>
+      </div>
+
+      <div className="selected-seat-list" aria-label="Ghế đã chọn">
+        {chosenSeats.length ? (
+          chosenSeats.map((seat) => (
+            <span className="selected-seat-pill" key={seat.id}>
+              {seat.label}
+            </span>
+          ))
+        ) : (
+          <p className="summary-empty">Chưa chọn ghế nào.</p>
+        )}
       </div>
 
       <dl className="summary-list">
@@ -901,6 +922,7 @@ export function ComboPicker({
                     <Button
                       size="icon-sm"
                       variant="outline"
+                      className={comboQuantityButton}
                       aria-label={`Giảm ${combo.name}`}
                       onClick={() =>
                         setQuantity(combo.id, (quantities[combo.id] ?? 0) - 1)
@@ -914,6 +936,7 @@ export function ComboPicker({
                     <Button
                       size="icon-sm"
                       variant="outline"
+                      className={comboQuantityButton}
                       aria-label={`Tăng ${combo.name}`}
                       onClick={() =>
                         setQuantity(combo.id, (quantities[combo.id] ?? 0) + 1)
