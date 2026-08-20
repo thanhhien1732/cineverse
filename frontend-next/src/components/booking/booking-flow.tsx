@@ -119,7 +119,13 @@ export function BookingSteps({ active }: { active: number }) {
         (label, index) => (
           <li
             key={label}
-            className={index + 1 <= active ? "text-cv-primary-bright" : ""}
+            className={
+              index + 1 < active
+                ? "text-cv-success"
+                : index + 1 === active
+                  ? "text-cv-primary-bright"
+                  : ""
+            }
           >
             <span className="mx-auto mb-1 flex size-7 items-center justify-center rounded-full border border-current">
               {index + 1 < active ? (
