@@ -9,6 +9,7 @@ import {
   CakeIcon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   LayoutGridIcon,
   MapPinIcon,
   MinusIcon,
@@ -336,6 +337,7 @@ const fullDate = new Intl.DateTimeFormat("vi-VN", {
 
 function CinemaShowtimes({
   cinema,
+  brand,
   distanceKm,
   movie,
   date,
@@ -343,12 +345,14 @@ function CinemaShowtimes({
   onSelect,
 }: {
   cinema: Cinema;
+  brand: CinemaBrand | undefined;
   distanceKm: number;
   movie: Movie | undefined;
   date: string;
   pendingShowtime: Showtime | null;
   onSelect: (showtime: Showtime) => void;
 }) {
+  const [isOpen, setIsOpen] = useState(true);
   const groups = useMemo(() => {
     if (!movie) {
       return [];
@@ -377,25 +381,39 @@ function CinemaShowtimes({
         pendingShowtime?.cinemaId === cinema.id && "is-selected",
       )}
     >
-      <div className="cinema-head">
-        <div>
-          <p className="cinema-eyebrow">
-            {formatDistance(distanceKm)} · {cinema.cityName}
-          </p>
-          <h3>{cinema.name}</h3>
-          <p className="cinema-address">
-            <MapPinIcon />
-            {cinema.address}
-          </p>
-        </div>
-        <div className="cinema-features">
-          {cinema.features?.map((feature) => (
-            <span key={feature}>{feature}</span>
-          ))}
-        </div>
-      </div>
+      <button
+        type="button"
+        className="cinema-head"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span className="cinema-identity">
+          {brand && (
+            <span className="cinema-brand-logo">
+              <Image
+                alt={brand.name}
+                src={brand.logoPath}
+                width={52}
+                height={52}
+                loading="eager"
+                unoptimized
+              />
+            </span>
+          )}
+          <span>
+            <h3>{cinema.name}</h3>
+            <span className="cinema-address">
+              <MapPinIcon />
+              {cinema.address} · {formatDistance(distanceKm)}
+            </span>
+          </span>
+        </span>
+        <span className="cinema-toggle" aria-hidden>
+          <ChevronRightIcon />
+        </span>
+      </button>
 
-      <div className="showtime-groups">
+      <div className="showtime-groups" hidden={!isOpen}>
         {groups.map(([label, items]) => (
           <div key={label}>
             <p className="showtime-group-label">{label}</p>
@@ -573,6 +591,7 @@ export function ShowtimePicker({
               <CinemaShowtimes
                 key={entry.cinema.id}
                 cinema={entry.cinema}
+                brand={brands.find((item) => item.id === entry.cinema.brandId)}
                 distanceKm={entry.distanceKm}
                 movie={movie}
                 date={date}
