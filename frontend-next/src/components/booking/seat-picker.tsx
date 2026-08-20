@@ -1,21 +1,15 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CalendarIcon,
-  ClapperboardIcon,
-  ClockIcon,
-  MapPinIcon,
-  ProjectorIcon,
-  TicketIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingSteps } from "@/components/booking/booking-flow";
+import {
+  ShowtimeSummaryCard,
+  type BookingShowtimeSummary,
+} from "@/components/booking/showtime-summary-card";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
 import { usePanZoom } from "@/lib/use-pan-zoom";
 import { useBookingStore } from "@/lib/stores/booking.store";
@@ -185,15 +179,7 @@ function SeatLegend() {
   );
 }
 
-export interface SeatShowtimeSummary {
-  readonly movieTitle: string;
-  readonly posterPath: string;
-  readonly cinemaName: string;
-  readonly hall: string;
-  readonly dateLabel: string;
-  readonly timeLabel: string;
-  readonly formatLabel: string;
-}
+export type SeatShowtimeSummary = BookingShowtimeSummary;
 
 export function SeatPicker({
   showtimeSummary,
@@ -276,47 +262,7 @@ export function SeatPicker({
         Quay lại
       </Link>
       <div className="seat-context">
-        {showtimeSummary && (
-          <div className="seat-showtime-card">
-            <Image
-              alt=""
-              aria-hidden
-              className="seat-showtime-poster"
-              height={90}
-              loading="eager"
-              src={showtimeSummary.posterPath}
-              width={60}
-            />
-            <div>
-              <p className="seat-showtime-eyebrow">Suất chiếu đã chọn</p>
-              <h2 className="seat-showtime-title">
-                {showtimeSummary.movieTitle}
-              </h2>
-              <div className="seat-showtime-meta">
-                <span>
-                  <MapPinIcon aria-hidden="true" />
-                  {showtimeSummary.cinemaName}
-                </span>
-                <span>
-                  <ProjectorIcon aria-hidden="true" />
-                  {showtimeSummary.hall}
-                </span>
-                <span>
-                  <CalendarIcon aria-hidden="true" />
-                  {showtimeSummary.dateLabel}
-                </span>
-                <span>
-                  <ClockIcon aria-hidden="true" />
-                  {showtimeSummary.timeLabel}
-                </span>
-                <span>
-                  <ClapperboardIcon aria-hidden="true" />
-                  {showtimeSummary.formatLabel}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
+        {showtimeSummary && <ShowtimeSummaryCard summary={showtimeSummary} />}
         <SeatHoldTimer durationSeconds={600} onExpire={handleExpire} />
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

@@ -1,7 +1,15 @@
 import { ComboPicker } from "@/components/booking/booking-flow";
-import { mockComboRepository } from "@/services/mock-repositories";
+import {
+  mockCatalogueRepository,
+  mockComboRepository,
+  mockShowtimeRepository,
+} from "@/services/mock-repositories";
 export default async function Page() {
-  const combos = await mockComboRepository.findAllCombos();
+  const [combos, movies, cinemas] = await Promise.all([
+    mockComboRepository.findAllCombos(),
+    mockCatalogueRepository.findAllMovies(),
+    mockShowtimeRepository.findCinemas(),
+  ]);
   return (
     <section className="mx-auto max-w-340 px-page py-section">
       <p className="text-xs font-bold tracking-[.2em] text-cv-primary-bright uppercase">
@@ -12,7 +20,7 @@ export default async function Page() {
         Chọn bắp rang, nước uống và món ăn nhẹ hoặc bỏ qua để thanh toán ngay.
       </p>
       <div className="mt-10">
-        <ComboPicker combos={combos} />
+        <ComboPicker combos={combos} movies={movies} cinemas={cinemas} />
       </div>
     </section>
   );

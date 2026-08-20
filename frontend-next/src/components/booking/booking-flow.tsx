@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeftIcon,
   ArrowRightIcon,
   CakeIcon,
   CheckIcon,
@@ -22,6 +23,7 @@ import {
   ageRestrictionPolicies,
   ratingAliases,
 } from "@/components/booking/age-restriction-modal";
+import { ShowtimeSummaryCard } from "@/components/booking/showtime-summary-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -326,6 +328,15 @@ const weekdayShort = new Intl.DateTimeFormat("vi-VN", {
 
 const fullDate = new Intl.DateTimeFormat("vi-VN", {
   weekday: "long",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+/** Định dạng ngày trên thẻ suất chiếu, khớp với bước chọn ghế. */
+const showtimeCardDate = new Intl.DateTimeFormat("vi-VN", {
+  weekday: "short",
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
@@ -802,15 +813,60 @@ function ComboSelectionSummary({
 
 export function ComboPicker({
   combos,
+  movies,
+  cinemas,
 }: {
   combos: readonly Combo[];
+  movies: readonly Movie[];
+  cinemas: readonly Cinema[];
 }) {
   const router = useRouter();
   const quantities = useBookingStore((state) => state.comboQuantities);
   const setQuantity = useBookingStore((state) => state.setComboQuantity);
+  const showtimeId = useBookingStore((state) => state.showtimeId);
+
+  /** Quay lại đúng suất chiếu đang đặt để người dùng đổi ghế mà không mất lựa chọn. */
+  const seatsHref = showtimeId
+    ? `/booking/${encodeURIComponent(showtimeId)}/seats`
+    : "/showtimes";
+
+  const showtimeSummary = useMemo(() => {
+    const showtime = resolveShowtimeById(showtimeId, cinemas);
+
+    if (!showtime) {
+      return null;
+    }
+
+    const movie = movies.find((item) => item.id === showtime.movieId);
+    const cinema = cinemas.find((item) => item.id === showtime.cinemaId);
+
+    if (!movie || !cinema) {
+      return null;
+    }
+
+    return {
+      movieTitle: movie.title,
+      posterPath: movie.posterPath,
+      cinemaName: cinema.name,
+      hall: `Phòng chiếu ${showtime.hall}`,
+      dateLabel: showtimeCardDate.format(new Date(showtime.startsAt)),
+      timeLabel: `${showtimeStartLabel(showtime)} ~ ${showtimeEndLabel(showtime, movie.durationMinutes)}`,
+      formatLabel: showtimeGroupLabel(showtime),
+    };
+  }, [cinemas, movies, showtimeId]);
+
   return (
     <div>
       <BookingSteps active={3} />
+      <Link className="home-text-link text-link-back" href={seatsHref}>
+        <ArrowLeftIcon aria-hidden="true" />
+        Quay lại
+      </Link>
+      {showtimeSummary && (
+        <div className="seat-context">
+          <ShowtimeSummaryCard summary={showtimeSummary} />
+        </div>
+      )}
       <div className="booking-content-grid grid gap-6">
         <section className="grid gap-4 sm:grid-cols-2">
           {combos.map((combo) => (
