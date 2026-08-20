@@ -71,7 +71,6 @@ const reservedSeatIds = new Set([
 ]);
 const maximumSeatSelection = 8;
 const baseSeatPrice = 95000;
-const serviceFeePerAdmission = 5000;
 
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
@@ -96,12 +95,11 @@ function SeatSelectionSummary({
     (total, seat) => total + baseSeatPrice * seat.priceMultiplier,
     0,
   );
-  /** Ghế đôi tính là hai lượt khách nên thu hai phần phí dịch vụ. */
+  /** Ghế đôi tính là hai lượt khách. */
   const admissionCount = chosen.reduce(
     (total, seat) => total + (seat.kind === "couple" ? 2 : 1),
     0,
   );
-  const serviceFee = admissionCount * serviceFeePerAdmission;
 
   return (
     <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
@@ -132,17 +130,9 @@ function SeatSelectionSummary({
       </div>
 
       <dl className="summary-list">
-        <div>
-          <dt>Tiền vé</dt>
-          <dd>{money.format(seatSubtotal)}</dd>
-        </div>
-        <div>
-          <dt>Phí dịch vụ</dt>
-          <dd>{money.format(serviceFee)}</dd>
-        </div>
         <div className="summary-total">
           <dt>Tạm tính</dt>
-          <dd>{money.format(seatSubtotal + serviceFee)}</dd>
+          <dd>{money.format(seatSubtotal)}</dd>
         </div>
       </dl>
 

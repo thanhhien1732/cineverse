@@ -172,10 +172,8 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       ),
     [booking.comboQuantities, combos],
   );
-  const serviceFee = getAdmissionCount(booking.seatIds) * 5000;
   const voucherDiscount = voucherApplied ? Math.min(seatSubtotal, 20000) : 0;
-  const orderTotal =
-    seatSubtotal + comboSubtotal + serviceFee - voucherDiscount;
+  const orderTotal = seatSubtotal + comboSubtotal - voucherDiscount;
 
   const setField = (field: keyof CheckoutValues) => {
     return (event: ChangeEvent<HTMLInputElement>) => {
@@ -539,7 +537,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           movie={selectedMovie}
           seatIds={booking.seatIds}
           seatSubtotal={seatSubtotal}
-          serviceFee={serviceFee}
           showtime={selectedShowtime}
           total={orderTotal}
           voucherDiscount={voucherDiscount}
@@ -612,7 +609,6 @@ function CheckoutOrderSummary({
   seatIds,
   seatSubtotal,
   comboSubtotal,
-  serviceFee,
   voucherDiscount,
   total,
 }: {
@@ -623,7 +619,6 @@ function CheckoutOrderSummary({
   readonly seatIds: readonly string[];
   readonly seatSubtotal: number;
   readonly comboSubtotal: number;
-  readonly serviceFee: number;
   readonly voucherDiscount: number;
   readonly total: number;
 }) {
@@ -682,10 +677,6 @@ function CheckoutOrderSummary({
               </dd>
             </div>
           ))}
-        <div>
-          <dt>Phí dịch vụ</dt>
-          <dd>{money.format(serviceFee)}</dd>
-        </div>
         {voucherDiscount > 0 && (
           <div className="summary-discount">
             <dt>Voucher CINE20</dt>

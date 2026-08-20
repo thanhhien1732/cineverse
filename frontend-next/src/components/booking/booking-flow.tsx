@@ -170,13 +170,6 @@ export function BookingSummary({
     0,
   );
 
-  const admissionCount = draft.seatIds.reduce(
-    (total, seatId) =>
-      total +
-      (seatPlan.find((seat) => seat.id === seatId)?.kind === "couple" ? 2 : 1),
-    0,
-  );
-
   return (
     <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
       <p className="text-xs font-bold tracking-widest text-primary-bright">
@@ -223,9 +216,7 @@ export function BookingSummary({
 
         <div className="mt-2 flex justify-between border-t pt-3 text-base font-bold">
           <span>Tổng cộng</span>
-          <span>
-            {money.format(seatTotal + comboTotal + admissionCount * 5000)}
-          </span>
+          <span>{money.format(seatTotal + comboTotal)}</span>
         </div>
 
         {action}
@@ -844,8 +835,7 @@ export function Checkout({
         (total, combo) =>
           total + combo.unitPrice * (draft.comboQuantities[combo.id] ?? 0),
         0,
-      ) +
-      draft.seatIds.length * 5000,
+      ),
     [combos, draft.comboQuantities, draft.seatIds],
   );
   if (!draft.showtimeId || !draft.seatIds.length)
