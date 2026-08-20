@@ -427,25 +427,20 @@
     border-top: 1px solid var(--border);
   }
 
-  .summary-combos {
-    margin: 0.75rem 0 1rem;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.625rem;
-    background: rgb(255 255 255 / 2.5%);
+  /* Chi tiết từng combo, thục vào bên dưới hàng "Combo" — không có khung viền. */
+  .summary-list .summary-combo-line {
+    padding-left: 1rem;
   }
 
-  .summary-combos p {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.875rem;
-    margin: 0.375rem 0;
+  .summary-combo-line dt {
     color: var(--muted);
     font-size: 0.76rem;
   }
 
-  .summary-combos b {
+  .summary-combo-line dd {
     color: var(--foreground-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
   }
 
   .selected-seat-pill {

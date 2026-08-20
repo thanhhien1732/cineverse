@@ -794,30 +794,28 @@ function ComboSelectionSummary({
         </div>
         <div>
           <dt>Combo</dt>
-          <dd>{money.format(comboSubtotal)}</dd>
         </div>
+        {comboLines.length ? (
+          comboLines.map((line) => (
+            <div className="summary-combo-line" key={line.combo.id}>
+              <dt>
+                {line.quantity} × {line.combo.name}
+              </dt>
+              <dd>{money.format(line.combo.unitPrice * line.quantity)}</dd>
+            </div>
+          ))
+        ) : (
+          <div className="summary-combo-line">
+            <dt className="summary-empty">
+              Bạn có thể bỏ qua combo và tiếp tục thanh toán.
+            </dt>
+          </div>
+        )}
         <div className="summary-total">
           <dt>Tổng cộng</dt>
           <dd>{money.format(seatSubtotal + comboSubtotal)}</dd>
         </div>
       </dl>
-
-      {comboLines.length ? (
-        <div className="summary-combos">
-          {comboLines.map((line) => (
-            <p key={line.combo.id}>
-              <span>
-                {line.quantity} × {line.combo.name}
-              </span>
-              <b>{money.format(line.combo.unitPrice * line.quantity)}</b>
-            </p>
-          ))}
-        </div>
-      ) : (
-        <p className="summary-empty">
-          Bạn có thể bỏ qua combo và tiếp tục thanh toán.
-        </p>
-      )}
 
       <button
         type="button"
