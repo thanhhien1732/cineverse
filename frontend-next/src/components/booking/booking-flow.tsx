@@ -713,13 +713,96 @@ export function SeatPicker({
   );
 }
 
+function ComboSelectionSummary({
+  combos,
+  onContinue,
+}: {
+  combos: readonly Combo[];
+  onContinue: () => void;
+}) {
+  const seatIds = useBookingStore((state) => state.seatIds);
+  const comboQuantities = useBookingStore((state) => state.comboQuantities);
+
+  const seatSubtotal = seatIds.reduce(
+    (total, id) =>
+      total +
+      95000 * (seatPlan.find((seat) => seat.id === id)?.priceMultiplier ?? 1),
+    0,
+  );
+
+  const comboLines = combos
+    .map((combo) => ({ combo, quantity: comboQuantities[combo.id] ?? 0 }))
+    .filter((line) => line.quantity > 0);
+
+  const comboSubtotal = comboLines.reduce(
+    (total, line) => total + line.combo.unitPrice * line.quantity,
+    0,
+  );
+
+  return (
+    <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
+      <div className="flex items-center gap-2.5 border-b border-border pb-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
+          <TicketIcon className="size-4.5" />
+        </span>
+        <div className="grid gap-0.5">
+          <p className="text-[.63rem] font-extrabold tracking-[.11em] text-muted-foreground uppercase">
+            Đơn hàng
+          </p>
+          <p className="font-bold leading-tight">
+            {seatIds.length} ghế đã chọn
+          </p>
+        </div>
+      </div>
+
+      <dl className="summary-list">
+        <div>
+          <dt>Tiền vé</dt>
+          <dd>{money.format(seatSubtotal)}</dd>
+        </div>
+        <div>
+          <dt>Combo</dt>
+          <dd>{money.format(comboSubtotal)}</dd>
+        </div>
+        <div className="summary-total">
+          <dt>Tổng cộng</dt>
+          <dd>{money.format(seatSubtotal + comboSubtotal)}</dd>
+        </div>
+      </dl>
+
+      {comboLines.length ? (
+        <div className="summary-combos">
+          {comboLines.map((line) => (
+            <p key={line.combo.id}>
+              <span>
+                {line.quantity} × {line.combo.name}
+              </span>
+              <b>{money.format(line.combo.unitPrice * line.quantity)}</b>
+            </p>
+          ))}
+        </div>
+      ) : (
+        <p className="summary-empty">
+          Bạn có thể bỏ qua combo và tiếp tục thanh toán.
+        </p>
+      )}
+
+      <button
+        type="button"
+        className="summary-cta-button"
+        disabled={!seatIds.length}
+        onClick={onContinue}
+      >
+        Tiếp tục thanh toán
+        <ArrowRightIcon />
+      </button>
+    </aside>
+  );
+}
+
 export function ComboPicker({
-  movies,
-  cinemas,
   combos,
 }: {
-  movies: readonly Movie[];
-  cinemas: readonly Cinema[];
   combos: readonly Combo[];
 }) {
   const router = useRouter();
@@ -784,25 +867,10 @@ export function ComboPicker({
             </article>
           ))}
         </section>
-        <div className="grid content-start gap-4">
-          <BookingSummary
-            movies={movies}
-            cinemas={cinemas}
-            combos={combos}
-          />
-          <Button
-            disabled={!useBookingStore.getState().seatIds.length}
-            onClick={() => router.push("/booking/checkout")}
-          >
-            Tiếp tục thanh toán
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/booking/checkout")}
-          >
-            Bỏ qua combo
-          </Button>
-        </div>
+        <ComboSelectionSummary
+          combos={combos}
+          onContinue={() => router.push("/booking/checkout")}
+        />
       </div>
     </div>
   );
