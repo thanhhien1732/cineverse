@@ -2,15 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRightIcon, TicketIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  BookingSteps,
-  BookingSummary,
-} from "@/components/booking/booking-flow";
+import { BookingSteps } from "@/components/booking/booking-flow";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
-import type { Cinema, Combo, Movie, Seat } from "@/types/domain";
+import type { Seat } from "@/types/domain";
 
 interface SeatMapItem extends Seat {
   readonly row: string;
@@ -72,11 +70,93 @@ const reservedSeatIds = new Set([
   "J9-J10",
 ]);
 const maximumSeatSelection = 8;
+const baseSeatPrice = 95000;
+const serviceFeePerAdmission = 5000;
 
-interface SeatPickerProps {
-  readonly movies: readonly Movie[];
-  readonly cinemas: readonly Cinema[];
-  readonly combos: readonly Combo[];
+const money = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
+function SeatSelectionSummary({
+  selectedSeatIds,
+  canContinue,
+  onContinue,
+}: {
+  selectedSeatIds: readonly string[];
+  canContinue: boolean;
+  onContinue: () => void;
+}) {
+  const chosen = selectedSeatIds
+    .map((id) => seats.find((seat) => seat.id === id))
+    .filter((seat): seat is SeatMapItem => seat !== undefined);
+
+  const seatSubtotal = chosen.reduce(
+    (total, seat) => total + baseSeatPrice * seat.priceMultiplier,
+    0,
+  );
+  /** Ghế đôi tính là hai lượt khách nên thu hai phần phí dịch vụ. */
+  const admissionCount = chosen.reduce(
+    (total, seat) => total + (seat.kind === "couple" ? 2 : 1),
+    0,
+  );
+  const serviceFee = admissionCount * serviceFeePerAdmission;
+
+  return (
+    <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
+      <div className="flex items-center gap-2.5 border-b border-border pb-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
+          <TicketIcon className="size-4.5" />
+        </span>
+        <div className="grid gap-0.5">
+          <p className="text-[.63rem] font-extrabold tracking-[.11em] text-muted-foreground uppercase">
+            Ghế đã chọn
+          </p>
+          <p className="font-bold leading-tight">
+            {admissionCount} vé · tối đa {maximumSeatSelection} lựa chọn
+          </p>
+        </div>
+      </div>
+
+      <div className="selected-seat-list" aria-label="Ghế đã chọn">
+        {chosen.length ? (
+          chosen.map((seat) => (
+            <span className="selected-seat-pill" key={seat.id}>
+              {seat.label}
+            </span>
+          ))
+        ) : (
+          <p className="summary-empty">Chưa chọn ghế nào.</p>
+        )}
+      </div>
+
+      <dl className="summary-list">
+        <div>
+          <dt>Tiền vé</dt>
+          <dd>{money.format(seatSubtotal)}</dd>
+        </div>
+        <div>
+          <dt>Phí dịch vụ</dt>
+          <dd>{money.format(serviceFee)}</dd>
+        </div>
+        <div className="summary-total">
+          <dt>Tạm tính</dt>
+          <dd>{money.format(seatSubtotal + serviceFee)}</dd>
+        </div>
+      </dl>
+
+      <button
+        type="button"
+        className="summary-cta-button"
+        disabled={!canContinue}
+        onClick={onContinue}
+      >
+        Chọn combo
+        <ArrowRightIcon />
+      </button>
+    </aside>
+  );
 }
 
 function SeatLegend() {
@@ -101,7 +181,7 @@ function SeatLegend() {
   );
 }
 
-export function SeatPicker({ movies, cinemas, combos }: SeatPickerProps) {
+export function SeatPicker() {
   const router = useRouter();
   const selectedSeatIds = useBookingStore((state) => state.seatIds);
   const showtimeId = useBookingStore((state) => state.showtimeId);
@@ -249,26 +329,10 @@ export function SeatPicker({ movies, cinemas, combos }: SeatPickerProps) {
             </p>
           )}
         </section>
-        <BookingSummary
-          movies={movies}
-          cinemas={cinemas}
-          combos={combos}
-          action={
-            <div className="grid gap-2">
-              <Button
-                className="w-full"
-                disabled={!showtimeId || selectedSeatIds.length === 0}
-                onClick={() => router.push("/booking/combos")}
-              >
-                Chọn combo
-              </Button>
-              {selectedSeatIds.length === 0 && (
-                <p className="text-xs text-destructive">
-                  Vui lòng chọn ít nhất một ghế để tiếp tục.
-                </p>
-              )}
-            </div>
-          }
+        <SeatSelectionSummary
+          selectedSeatIds={selectedSeatIds}
+          canContinue={Boolean(showtimeId) && selectedSeatIds.length > 0}
+          onContinue={() => router.push("/booking/combos")}
         />
       </div>
     </div>
