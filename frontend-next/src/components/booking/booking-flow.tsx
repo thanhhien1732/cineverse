@@ -8,6 +8,8 @@ import {
   ArrowRightIcon,
   CakeIcon,
   CheckIcon,
+  LayoutGridIcon,
+  MapPinIcon,
   MinusIcon,
   PlusIcon,
   PrinterIcon,
@@ -22,9 +24,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { distanceInKm, formatDistance } from "@/lib/geo";
+import {
+  buildShowtimesFor,
+  resolveShowtimeById,
+  showtimeEndLabel,
+  showtimeGroupLabel,
+  showtimeStartLabel,
+} from "@/lib/showtime-schedule";
+import { useViewerLocation } from "@/lib/use-viewer-location";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import type {
   Cinema,
+  CinemaBrand,
   Combo,
   Movie,
   Seat,
@@ -98,12 +110,6 @@ const money = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 0,
 });
 
-const days = Array.from({ length: 7 }, (_, index) => {
-  const value = new Date("2026-08-03T12:00:00+07:00");
-  value.setDate(value.getDate() + index);
-  return value;
-});
-
 export function BookingSteps({ active }: { active: number }) {
   return (
     <ol className="mb-8 grid grid-cols-5 gap-2 text-center text-xs text-muted-foreground">
@@ -130,18 +136,18 @@ export function BookingSteps({ active }: { active: number }) {
 
 export function BookingSummary({
   movies,
-  showtimes,
+  cinemas,
   combos,
   action,
 }: {
   movies: readonly Movie[];
-  showtimes: readonly Showtime[];
+  cinemas: readonly Cinema[];
   combos: readonly Combo[];
   action?: ReactNode;
 }) {
   const draft = useBookingStore((state) => state);
   const movie = movies.find((item) => item.id === draft.movieId);
-  const showtime = showtimes.find((item) => item.id === draft.showtimeId);
+  const showtime = resolveShowtimeById(draft.showtimeId, cinemas);
 
   const seatTotal = draft.seatIds.reduce(
     (total, id) =>
@@ -309,157 +315,264 @@ function ShowtimeSelectionSummary({
   );
 }
 
-export function ShowtimePicker({
-  movies,
-  cinemas,
-  showtimes,
-  combos,
+/** `2026-08-20` → Date lúc 00:00 giờ Việt Nam. */
+function parseBookingDate(date: string): Date {
+  return new Date(`${date}T00:00:00+07:00`);
+}
+
+const weekdayShort = new Intl.DateTimeFormat("vi-VN", {
+  weekday: "short",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+const fullDate = new Intl.DateTimeFormat("vi-VN", {
+  weekday: "long",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+function CinemaShowtimes({
+  cinema,
+  distanceKm,
+  movie,
+  date,
+  pendingShowtime,
+  onSelect,
 }: {
-  movies: readonly Movie[];
+  cinema: Cinema;
+  distanceKm: number;
+  movie: Movie | undefined;
+  date: string;
+  pendingShowtime: Showtime | null;
+  onSelect: (showtime: Showtime) => void;
+}) {
+  const groups = useMemo(() => {
+    if (!movie) {
+      return [];
+    }
+
+    const byLabel = new Map<string, Showtime[]>();
+
+    for (const showtime of buildShowtimesFor(movie.id, cinema, date)) {
+      const label = showtimeGroupLabel(showtime);
+      const bucket = byLabel.get(label);
+
+      if (bucket) {
+        bucket.push(showtime);
+      } else {
+        byLabel.set(label, [showtime]);
+      }
+    }
+
+    return [...byLabel.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [cinema, date, movie]);
+
+  return (
+    <article
+      className={cn(
+        "cinema-card",
+        pendingShowtime?.cinemaId === cinema.id && "is-selected",
+      )}
+    >
+      <div className="cinema-head">
+        <div>
+          <p className="cinema-eyebrow">
+            {formatDistance(distanceKm)} · {cinema.cityName}
+          </p>
+          <h3>{cinema.name}</h3>
+          <p className="cinema-address">
+            <MapPinIcon />
+            {cinema.address}
+          </p>
+        </div>
+        <div className="cinema-features">
+          {cinema.features?.map((feature) => (
+            <span key={feature}>{feature}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="showtime-groups">
+        {groups.map(([label, items]) => (
+          <div key={label}>
+            <p className="showtime-group-label">{label}</p>
+            <div className="showtime-grid">
+              {items.map((showtime) => (
+                <button
+                  key={showtime.id}
+                  type="button"
+                  className={cn(
+                    "showtime-chip",
+                    pendingShowtime?.id === showtime.id && "is-active",
+                  )}
+                  onClick={() => onSelect(showtime)}
+                >
+                  <strong>{showtimeStartLabel(showtime)}</strong>
+                  <span>
+                    ~ {showtimeEndLabel(showtime, movie?.durationMinutes ?? 0)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        {!groups.length && (
+          <p className="text-sm text-muted-foreground">Chưa có suất phù hợp.</p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+export function ShowtimePicker({
+  movie,
+  brands,
+  cinemas,
+  dates,
+}: {
+  movie: Movie;
+  brands: readonly CinemaBrand[];
   cinemas: readonly Cinema[];
-  showtimes: readonly Showtime[];
-  combos: readonly Combo[];
+  dates: readonly string[];
 }) {
   const router = useRouter();
-  const [movieId, setMovieId] = useState(
-    movies.find((movie) => movie.status === "now-showing")?.id ??
-    movies[0]?.id ??
-    "",
-  );
-  const [day, setDay] = useState(days[0].toDateString());
+  const [date, setDate] = useState(dates[0]);
+  const [brandId, setBrandId] = useState<string | null>(null);
   const [pendingShowtime, setPendingShowtime] = useState<Showtime | null>(null);
   const [ageModalOpen, setAgeModalOpen] = useState(false);
   const selectMovie = useBookingStore((state) => state.selectMovie);
   const selectShowtime = useBookingStore((state) => state.selectShowtime);
-  const selectedMovie = movies.find((movie) => movie.id === movieId);
+  const { coordinates } = useViewerLocation();
   const selectedCinema = pendingShowtime
     ? cinemas.find((cinema) => cinema.id === pendingShowtime.cinemaId)
     : null;
-  const visible = showtimes.filter(
-    (showtime) =>
-      showtime.movieId === movieId &&
-      new Date(showtime.startsAt).toDateString() === day,
+
+  /** Rạp gần khách nhất xếp lên đầu. */
+  const rankedCinemas = useMemo(
+    () =>
+      cinemas
+        .map((cinema) => ({
+          cinema,
+          distanceKm: distanceInKm(coordinates, cinema),
+        }))
+        .sort((left, right) => left.distanceKm - right.distanceKm),
+    [cinemas, coordinates],
   );
+
+  const visibleCinemas = brandId
+    ? rankedCinemas.filter((entry) => entry.cinema.brandId === brandId)
+    : rankedCinemas;
+
   return (
     <div>
       <BookingSteps active={1} />
       <div className="booking-content-grid grid gap-6">
         <div className="grid gap-6">
           <section className="rounded-xl border border-border bg-surface p-5">
-            <h2 className="font-bold">01. Chọn phim</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {movies
-                .filter((movie) => movie.status === "now-showing")
-                .map((movie) => (
+            <div className="booking-panel-head">
+              <h2>01. Chọn ngày</h2>
+              <span>7 ngày gần nhất</span>
+            </div>
+            <div className="date-picker">
+              {dates.map((value) => {
+                const parsed = parseBookingDate(value);
+                return (
                   <button
-                    key={movie.id}
+                    key={value}
                     type="button"
+                    className={cn("date-chip", value === date && "is-active")}
                     onClick={() => {
-                      setMovieId(movie.id);
+                      setDate(value);
                       setPendingShowtime(null);
                     }}
-                    className={cn(
-                      "rounded-lg border p-3 text-left",
-                      movie.id === movieId
-                        ? "border-primary bg-primary/10"
-                        : "border-border",
-                    )}
                   >
-                    <span className="block font-semibold">{movie.title}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {movie.formats.join(" · ")}
-                    </span>
+                    <small>{weekdayShort.format(parsed)}</small>
+                    <strong>{value.slice(8, 10)}</strong>
+                    <span>Tháng {value.slice(5, 7)}</span>
                   </button>
-                ))}
-            </div>
-          </section>
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h2 className="font-bold">02. Chọn ngày</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {days.map((date) => (
-                <Button
-                  key={date.toISOString()}
-                  type="button"
-                  size="sm"
-                  variant={day === date.toDateString() ? "default" : "outline"}
-                  onClick={() => {
-                    setDay(date.toDateString());
-                    setPendingShowtime(null);
-                  }}
-                >
-                  {new Intl.DateTimeFormat("vi-VN", {
-                    weekday: "short",
-                    day: "2-digit",
-                    month: "2-digit",
-                  }).format(date)}
-                </Button>
-              ))}
-            </div>
-          </section>
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h2 className="font-bold">03. Chọn rạp và suất</h2>
-            <div className="mt-4 grid gap-4">
-              {cinemas.map((cinema) => {
-                const cinemaShows = visible.filter(
-                  (showtime) => showtime.cinemaId === cinema.id,
-                );
-                return (
-                  <div
-                    key={cinema.id}
-                    className="rounded-lg border border-border p-4"
-                  >
-                    <p className="font-semibold">{cinema.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {cinema.address} · {cinema.features?.join(" · ")}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {cinemaShows.map((showtime) => (
-                        <Button
-                          key={showtime.id}
-                          type="button"
-                          size="sm"
-                          variant={
-                            pendingShowtime?.id === showtime.id
-                              ? "default"
-                              : "outline"
-                          }
-                          onClick={() => setPendingShowtime(showtime)}
-                        >
-                          {new Intl.DateTimeFormat("vi-VN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }).format(new Date(showtime.startsAt))}{" "}
-                          · {showtime.format}
-                        </Button>
-                      ))}
-                      {!cinemaShows.length && (
-                        <span className="text-sm text-muted-foreground">
-                          Chưa có suất phù hợp.
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 );
               })}
             </div>
           </section>
+
+          <section className="rounded-xl border border-border bg-surface p-5">
+            <div className="booking-panel-head">
+              <h2>02. Chọn rạp</h2>
+              <span>{cinemas.length} rạp tại TP. Hồ Chí Minh</span>
+            </div>
+            <div className="brand-picker">
+              <button
+                type="button"
+                className={cn("brand-tile", brandId === null && "is-active")}
+                onClick={() => {
+                  setBrandId(null);
+                  setPendingShowtime(null);
+                }}
+              >
+                <span className="brand-tile-all">
+                  <LayoutGridIcon />
+                </span>
+                <span className="brand-tile-name">Tất cả</span>
+              </button>
+              {brands.map((brand) => (
+                <button
+                  key={brand.id}
+                  type="button"
+                  className={cn(
+                    "brand-tile",
+                    brandId === brand.id && "is-active",
+                  )}
+                  onClick={() => {
+                    setBrandId(brand.id);
+                    setPendingShowtime(null);
+                  }}
+                >
+                  <span className="brand-tile-logo">
+                    <Image
+                      alt={brand.name}
+                      src={brand.logoPath}
+                      width={68}
+                      height={68}
+                      loading="eager"
+                      unoptimized
+                    />
+                  </span>
+                  <span className="brand-tile-name">{brand.shortName}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-surface p-5">
+            <div className="booking-panel-head">
+              <h2>03. Chọn suất chiếu</h2>
+              <span>Rạp gần bạn nhất xếp trước</span>
+            </div>
+            <div className="cinema-list">
+              {visibleCinemas.map((entry) => (
+                <CinemaShowtimes
+                  key={entry.cinema.id}
+                  cinema={entry.cinema}
+                  distanceKm={entry.distanceKm}
+                  movie={movie}
+                  date={date}
+                  pendingShowtime={pendingShowtime}
+                  onSelect={setPendingShowtime}
+                />
+              ))}
+            </div>
+          </section>
         </div>
         <ShowtimeSelectionSummary
-          movie={selectedMovie}
-          ratingLabel={selectedMovie?.ratingLabel ?? "P"}
-          dayLabel={new Intl.DateTimeFormat("vi-VN", {
-            weekday: "long",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }).format(new Date(day))}
+          movie={movie}
+          ratingLabel={movie.ratingLabel}
+          dayLabel={fullDate.format(parseBookingDate(date))}
           cinemaLabel={selectedCinema?.name ?? "Chưa chọn"}
           showtimeLabel={
             pendingShowtime
-              ? `${new Intl.DateTimeFormat("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }).format(new Date(pendingShowtime.startsAt))} · ${pendingShowtime.format}`
+              ? `${showtimeStartLabel(pendingShowtime)} · ${showtimeGroupLabel(pendingShowtime)}`
               : "Chưa chọn"
           }
           canContinue={pendingShowtime !== null}
@@ -468,7 +581,7 @@ export function ShowtimePicker({
       </div>
       <AgeRestrictionModal
         open={ageModalOpen}
-        rating={selectedMovie?.ratingLabel ?? "P"}
+        rating={movie.ratingLabel}
         onCancel={() => setAgeModalOpen(false)}
         onConfirm={() => {
           if (!pendingShowtime) {
@@ -486,11 +599,11 @@ export function ShowtimePicker({
 
 export function SeatPicker({
   movies,
-  showtimes,
+  cinemas,
   combos,
 }: {
   movies: readonly Movie[];
-  showtimes: readonly Showtime[];
+  cinemas: readonly Cinema[];
   combos: readonly Combo[];
 }) {
   const router = useRouter();
@@ -561,7 +674,7 @@ export function SeatPicker({
             </p>
           )}
         </section>
-        <BookingSummary movies={movies} showtimes={showtimes} combos={combos} />
+        <BookingSummary movies={movies} cinemas={cinemas} combos={combos} />
       </div>
     </div>
   );
@@ -569,11 +682,11 @@ export function SeatPicker({
 
 export function ComboPicker({
   movies,
-  showtimes,
+  cinemas,
   combos,
 }: {
   movies: readonly Movie[];
-  showtimes: readonly Showtime[];
+  cinemas: readonly Cinema[];
   combos: readonly Combo[];
 }) {
   const router = useRouter();
@@ -641,7 +754,7 @@ export function ComboPicker({
         <div className="grid content-start gap-4">
           <BookingSummary
             movies={movies}
-            showtimes={showtimes}
+            cinemas={cinemas}
             combos={combos}
           />
           <Button
@@ -664,11 +777,11 @@ export function ComboPicker({
 
 export function Checkout({
   movies,
-  showtimes,
+  cinemas,
   combos,
 }: {
   movies: readonly Movie[];
-  showtimes: readonly Showtime[];
+  cinemas: readonly Cinema[];
   combos: readonly Combo[];
 }) {
   const router = useRouter();
@@ -821,7 +934,7 @@ export function Checkout({
             Xác nhận thanh toán {money.format(ticketTotal)}
           </Button>
         </form>
-        <BookingSummary movies={movies} showtimes={showtimes} combos={combos} />
+        <BookingSummary movies={movies} cinemas={cinemas} combos={combos} />
       </div>
     </div>
   );

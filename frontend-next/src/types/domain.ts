@@ -21,13 +21,29 @@ export interface Movie {
   readonly trailerEmbedCode?: string;
 }
 
-export interface Cinema {
+/** Thương hiệu rạp (CGV, Lotte, Galaxy…) mà Cineverse tổng hợp vé. */
+export interface CinemaBrand {
   readonly id: string;
   readonly name: string;
+  /** Tên rút gọn cho tile chọn rạp — phải luôn vừa một hàng. */
+  readonly shortName: string;
+  readonly logoPath: string;
+}
+
+export interface Cinema {
+  readonly id: string;
+  readonly brandId: CinemaBrand["id"];
+  readonly name: string;
   readonly areaName: string;
+  readonly cityName: string;
   readonly address?: string;
   readonly features?: readonly string[];
+  readonly latitude: number;
+  readonly longitude: number;
 }
+
+/** Phụ đề hay lồng tiếng — dùng để gom nhóm suất chiếu. */
+export type ShowtimeAudioMode = "dubbed" | "subtitled";
 
 export interface Showtime {
   readonly id: string;
@@ -35,6 +51,7 @@ export interface Showtime {
   readonly cinemaId: Cinema["id"];
   readonly startsAt: string;
   readonly format: string;
+  readonly audioMode: ShowtimeAudioMode;
   readonly basePrice: number;
 }
 

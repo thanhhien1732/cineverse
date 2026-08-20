@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { bookingDateAt } from "@/lib/showtime-schedule";
 import type { CSSProperties } from "react";
 import {
   ArrowRightIcon,
@@ -26,11 +27,15 @@ export default async function MovieDetailPage({
   const { id } = await params;
   const movie = await mockCatalogueRepository.findMovieById(id);
   if (!movie) notFound();
-  const [movies, cinemas, showtimes] = await Promise.all([
+  const [movies, cinemas, allShowtimes] = await Promise.all([
     mockCatalogueRepository.findAllMovies(),
     mockShowtimeRepository.findCinemas(),
     mockShowtimeRepository.findShowtimesByMovie(movie.id),
   ]);
+  /** Chỉ xem trước vài suất gần nhất trong hôm nay, xem đủ ở trang đặt vé. */
+  const showtimes = allShowtimes
+    .filter((showtime) => showtime.startsAt.startsWith(bookingDateAt(0)))
+    .slice(0, 6);
   const others = movies.filter((item) => item.id !== movie.id);
   const sameGenre = others.filter((item) =>
     item.genres.some((genre) => movie.genres.includes(genre)),

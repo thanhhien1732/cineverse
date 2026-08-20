@@ -10,7 +10,7 @@ import {
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
-import type { Combo, Movie, Seat, Showtime } from "@/types/domain";
+import type { Cinema, Combo, Movie, Seat } from "@/types/domain";
 
 interface SeatMapItem extends Seat {
   readonly row: string;
@@ -75,7 +75,7 @@ const maximumSeatSelection = 8;
 
 interface SeatPickerProps {
   readonly movies: readonly Movie[];
-  readonly showtimes: readonly Showtime[];
+  readonly cinemas: readonly Cinema[];
   readonly combos: readonly Combo[];
 }
 
@@ -101,7 +101,7 @@ function SeatLegend() {
   );
 }
 
-export function SeatPicker({ movies, showtimes, combos }: SeatPickerProps) {
+export function SeatPicker({ movies, cinemas, combos }: SeatPickerProps) {
   const router = useRouter();
   const selectedSeatIds = useBookingStore((state) => state.seatIds);
   const showtimeId = useBookingStore((state) => state.showtimeId);
@@ -251,7 +251,7 @@ export function SeatPicker({ movies, showtimes, combos }: SeatPickerProps) {
         </section>
         <BookingSummary
           movies={movies}
-          showtimes={showtimes}
+          cinemas={cinemas}
           combos={combos}
           action={
             <div className="grid gap-2">

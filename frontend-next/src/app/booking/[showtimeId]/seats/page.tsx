@@ -10,22 +10,16 @@ export default async function Page({
   params: Promise<{ showtimeId: string }>;
 }) {
   await params;
-  const [movies, combos] = await Promise.all([
+  const [movies, cinemas, combos] = await Promise.all([
     mockCatalogueRepository.findAllMovies(),
+    mockShowtimeRepository.findCinemas(),
     mockComboRepository.findAllCombos(),
   ]);
-  const showtimes = (
-    await Promise.all(
-      movies.map((movie) =>
-        mockShowtimeRepository.findShowtimesByMovie(movie.id),
-      ),
-    )
-  ).flat();
   return (
     <section className="mx-auto max-w-340 px-page py-section">
       <h1 className="text-4xl font-black uppercase">Chọn ghế</h1>
       <div className="mt-8">
-        <SeatPicker movies={movies} showtimes={showtimes} combos={combos} />
+        <SeatPicker movies={movies} cinemas={cinemas} combos={combos} />
       </div>
     </section>
   );

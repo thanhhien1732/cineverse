@@ -17,9 +17,10 @@ import { AppModal } from "@/components/feedback/app-modal";
 import { useFeedback } from "@/components/feedback/feedback-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { resolveShowtimeById } from "@/lib/showtime-schedule";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
-import type { Combo, Movie, Showtime, Ticket } from "@/types/domain";
+import type { Cinema, Combo, Movie, Showtime, Ticket } from "@/types/domain";
 
 type PaymentMethod = "card" | "momo";
 
@@ -40,7 +41,7 @@ type CheckoutErrors = Partial<Record<keyof CheckoutValues, string>> & {
 
 interface CheckoutFormProps {
   readonly movies: readonly Movie[];
-  readonly showtimes: readonly Showtime[];
+  readonly cinemas: readonly Cinema[];
   readonly combos: readonly Combo[];
 }
 
@@ -139,7 +140,7 @@ function FieldError({ message }: { readonly message?: string }) {
   return <small className="form-field-error">{message}</small>;
 }
 
-export function CheckoutForm({ movies, showtimes, combos }: CheckoutFormProps) {
+export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const router = useRouter();
   const { notify } = useFeedback();
   const booking = useBookingStore((state) => state);
@@ -152,9 +153,8 @@ export function CheckoutForm({ movies, showtimes, combos }: CheckoutFormProps) {
   const [isConfirmingMomo, setIsConfirmingMomo] = useState(false);
 
   const selectedMovie = movies.find((movie) => movie.id === booking.movieId);
-  const selectedShowtime = showtimes.find(
-    (showtime) => showtime.id === booking.showtimeId,
-  );
+  const selectedShowtime =
+    resolveShowtimeById(booking.showtimeId, cinemas) ?? undefined;
   const seatSubtotal = useMemo(
     () =>
       booking.seatIds.reduce(

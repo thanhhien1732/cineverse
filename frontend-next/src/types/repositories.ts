@@ -1,4 +1,10 @@
-import type { Cinema, Combo, Movie, Showtime } from "@/types/domain";
+import type {
+  Cinema,
+  CinemaBrand,
+  Combo,
+  Movie,
+  Showtime,
+} from "@/types/domain";
 
 export interface CatalogueRepository {
   findAllMovies(): Promise<readonly Movie[]>;
@@ -7,6 +13,7 @@ export interface CatalogueRepository {
 }
 
 export interface ShowtimeRepository {
+  findBrands(): Promise<readonly CinemaBrand[]>;
   findCinemas(): Promise<readonly Cinema[]>;
   findShowtimesByMovie(movieId: string): Promise<readonly Showtime[]>;
 }
