@@ -469,102 +469,84 @@ export function ShowtimePicker({
     <div>
       <BookingSteps active={1} />
       <div className="booking-content-grid grid gap-6">
-        <div className="grid gap-6">
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <div className="booking-panel-head">
-              <h2>01. Chọn ngày</h2>
-              <span>7 ngày gần nhất</span>
-            </div>
-            <div className="date-picker">
-              {dates.map((value) => {
-                const parsed = parseBookingDate(value);
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    className={cn("date-chip", value === date && "is-active")}
-                    onClick={() => {
-                      setDate(value);
-                      setPendingShowtime(null);
-                    }}
-                  >
-                    <small>{weekdayShort.format(parsed)}</small>
-                    <strong>{value.slice(8, 10)}</strong>
-                    <span>Tháng {value.slice(5, 7)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <div className="booking-panel-head">
-              <h2>02. Chọn rạp</h2>
-              <span>{cinemas.length} rạp tại TP. Hồ Chí Minh</span>
-            </div>
-            <div className="brand-picker">
-              <button
-                type="button"
-                className={cn("brand-tile", brandId === null && "is-active")}
-                onClick={() => {
-                  setBrandId(null);
-                  setPendingShowtime(null);
-                }}
-              >
-                <span className="brand-tile-all">
-                  <LayoutGridIcon />
-                </span>
-                <span className="brand-tile-name">Tất cả</span>
-              </button>
-              {brands.map((brand) => (
+        <section className="booking-panel-stack rounded-xl border border-border bg-surface p-5">
+          <div className="date-picker">
+            {dates.map((value) => {
+              const parsed = parseBookingDate(value);
+              return (
                 <button
-                  key={brand.id}
+                  key={value}
                   type="button"
-                  className={cn(
-                    "brand-tile",
-                    brandId === brand.id && "is-active",
-                  )}
+                  className={cn("date-chip", value === date && "is-active")}
                   onClick={() => {
-                    setBrandId(brand.id);
+                    setDate(value);
                     setPendingShowtime(null);
                   }}
                 >
-                  <span className="brand-tile-logo">
-                    <Image
-                      alt={brand.name}
-                      src={brand.logoPath}
-                      width={68}
-                      height={68}
-                      loading="eager"
-                      unoptimized
-                    />
-                  </span>
-                  <span className="brand-tile-name">{brand.shortName}</span>
+                  <small>{weekdayShort.format(parsed)}</small>
+                  <strong>{value.slice(8, 10)}</strong>
+                  <span>Tháng {value.slice(5, 7)}</span>
                 </button>
-              ))}
-            </div>
-          </section>
+              );
+            })}
+          </div>
 
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <div className="booking-panel-head">
-              <h2>03. Chọn suất chiếu</h2>
-              <span>Rạp gần bạn nhất xếp trước</span>
-            </div>
-            <div className="cinema-list">
-              {visibleCinemas.map((entry) => (
-                <CinemaShowtimes
-                  key={entry.cinema.id}
-                  cinema={entry.cinema}
-                  distanceKm={entry.distanceKm}
-                  movie={movie}
-                  date={date}
-                  pendingShowtime={pendingShowtime}
-                  onSelect={setPendingShowtime}
-                />
-              ))}
-            </div>
-          </section>
-        </div>
+          <div className="brand-picker">
+            <button
+              type="button"
+              className={cn("brand-tile", brandId === null && "is-active")}
+              onClick={() => {
+                setBrandId(null);
+                setPendingShowtime(null);
+              }}
+            >
+              <span className="brand-tile-all">
+                <LayoutGridIcon />
+              </span>
+              <span className="brand-tile-name">Tất cả</span>
+            </button>
+            {brands.map((brand) => (
+              <button
+                key={brand.id}
+                type="button"
+                className={cn(
+                  "brand-tile",
+                  brandId === brand.id && "is-active",
+                )}
+                onClick={() => {
+                  setBrandId(brand.id);
+                  setPendingShowtime(null);
+                }}
+              >
+                <span className="brand-tile-logo">
+                  <Image
+                    alt={brand.name}
+                    src={brand.logoPath}
+                    width={68}
+                    height={68}
+                    loading="eager"
+                    unoptimized
+                  />
+                </span>
+                <span className="brand-tile-name">{brand.shortName}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="cinema-list">
+            {visibleCinemas.map((entry) => (
+              <CinemaShowtimes
+                key={entry.cinema.id}
+                cinema={entry.cinema}
+                distanceKm={entry.distanceKm}
+                movie={movie}
+                date={date}
+                pendingShowtime={pendingShowtime}
+                onSelect={setPendingShowtime}
+              />
+            ))}
+          </div>
+        </section>
         <ShowtimeSelectionSummary
           movie={movie}
           ratingLabel={movie.ratingLabel}

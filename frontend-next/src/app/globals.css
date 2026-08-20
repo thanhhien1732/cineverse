@@ -361,24 +361,16 @@
     cursor: not-allowed;
   }
 
-  .booking-panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.875rem;
-    margin-bottom: 1rem;
+  /* Ba bước chọn ngày / rạp / suất chiếu nằm chung một khung, ngăn bằng kẻ ngang. */
+  .booking-panel-stack {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
   }
 
-  .booking-panel-head h2 {
-    margin: 0;
-    font-size: 1.18rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-  }
-
-  .booking-panel-head>span {
-    color: var(--muted);
-    font-size: 0.76rem;
+  .booking-panel-stack>*+* {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
   }
 
   .date-picker {
