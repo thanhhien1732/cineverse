@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
+  ArrowLeftIcon,
   CreditCardIcon,
   LockKeyholeIcon,
   QrCodeIcon,
@@ -12,19 +13,21 @@ import {
   TicketIcon,
   UserRoundIcon,
 } from "lucide-react";
-import {
-  ageRestrictionPolicies,
-  ratingAliases,
-} from "@/components/booking/age-restriction-modal";
 import { BookingSteps } from "@/components/booking/booking-flow";
+import { ShowtimeSummaryCard } from "@/components/booking/showtime-summary-card";
 import { AppModal } from "@/components/feedback/app-modal";
 import { useFeedback } from "@/components/feedback/feedback-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { resolveShowtimeById } from "@/lib/showtime-schedule";
+import {
+  resolveShowtimeById,
+  showtimeEndLabel,
+  showtimeGroupLabel,
+  showtimeStartLabel,
+} from "@/lib/showtime-schedule";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
-import type { Cinema, Combo, Movie, Showtime, Ticket } from "@/types/domain";
+import type { Cinema, Combo, Movie, Ticket } from "@/types/domain";
 
 type PaymentMethod = "card" | "momo";
 
@@ -73,13 +76,6 @@ const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
-  timeZone: "Asia/Ho_Chi_Minh",
-});
-
-const checkoutTime = new Intl.DateTimeFormat("vi-VN", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
@@ -180,6 +176,21 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const selectedCinema = cinemas.find(
     (cinema) => cinema.id === selectedShowtime?.cinemaId,
   );
+  const showtimeSummary = useMemo(() => {
+    if (!selectedShowtime || !selectedMovie || !selectedCinema) {
+      return null;
+    }
+
+    return {
+      movieTitle: selectedMovie.title,
+      posterPath: selectedMovie.posterPath,
+      cinemaName: selectedCinema.name,
+      hall: `Phòng chiếu ${selectedShowtime.hall}`,
+      dateLabel: checkoutDate.format(new Date(selectedShowtime.startsAt)),
+      timeLabel: `${showtimeStartLabel(selectedShowtime)} ~ ${showtimeEndLabel(selectedShowtime, selectedMovie.durationMinutes)}`,
+      formatLabel: showtimeGroupLabel(selectedShowtime),
+    };
+  }, [selectedCinema, selectedMovie, selectedShowtime]);
   const seatSubtotal = useMemo(
     () =>
       booking.seatIds.reduce(
@@ -309,6 +320,15 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   return (
     <div>
       <BookingSteps active={4} />
+      <Link className="home-text-link text-link-back" href="/booking/combos">
+        <ArrowLeftIcon aria-hidden="true" />
+        Quay lại
+      </Link>
+      {showtimeSummary && (
+        <div className="seat-context">
+          <ShowtimeSummaryCard summary={showtimeSummary} />
+        </div>
+      )}
       <div className="checkout-grid">
         <form className="checkout-form-card" onSubmit={handleSubmit} noValidate>
           <section className="checkout-form-section">
@@ -561,12 +581,9 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           comboSubtotal={comboSubtotal}
           combos={combos}
           comboQuantities={booking.comboQuantities}
-          cinema={selectedCinema}
-          movie={selectedMovie}
           seatIds={booking.seatIds}
           serviceFee={serviceFee}
           seatSubtotal={seatSubtotal}
-          showtime={selectedShowtime}
           total={orderTotal}
           voucherDiscount={voucherDiscount}
         />
@@ -631,9 +648,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
 }
 
 function CheckoutOrderSummary({
-  movie,
-  cinema,
-  showtime,
   combos,
   comboQuantities,
   seatIds,
@@ -643,9 +657,6 @@ function CheckoutOrderSummary({
   voucherDiscount,
   total,
 }: {
-  readonly movie?: Movie;
-  readonly cinema?: Cinema;
-  readonly showtime?: Showtime;
   readonly combos: readonly Combo[];
   readonly comboQuantities: Readonly<Record<string, number>>;
   readonly seatIds: readonly string[];
@@ -655,89 +666,51 @@ function CheckoutOrderSummary({
   readonly voucherDiscount: number;
   readonly total: number;
 }) {
-  const normalizedRating = movie
-    ? (ratingAliases[movie.ratingLabel] ?? movie.ratingLabel)
-    : "P";
-  const policy =
-    ageRestrictionPolicies[normalizedRating] ?? ageRestrictionPolicies.P;
-  const showtimeStart = showtime ? new Date(showtime.startsAt) : undefined;
   const comboLines = combos
     .map((combo) => ({ combo, quantity: comboQuantities[combo.id] ?? 0 }))
     .filter((line) => line.quantity > 0);
 
   return (
     <aside className="checkout-summary-panel">
-      <div className="checkout-movie">
-        {movie && (
-          <Image
-            alt={`Poster phim ${movie.title}`}
-            height={108}
-            src={movie.posterPath}
-            width={72}
-          />
-        )}
-        <div>
-          <p className="auth-eyebrow">ĐƠN HÀNG CỦA BẠN</p>
-          <h2>{movie?.title ?? "CINEVERSE"}</h2>
-          <p>{cinema?.name ?? "Chưa chọn rạp"}</p>
+      <div className="flex items-center gap-2.5 border-b border-border pb-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
+          <TicketIcon aria-hidden="true" className="size-4.5" />
+        </span>
+        <div className="grid gap-0.5">
+          <p className="text-[.63rem] font-extrabold tracking-[.11em] text-muted-foreground uppercase">
+            Đơn hàng của bạn
+          </p>
+          <p className="font-bold leading-tight">
+            {seatIds.length} ghế · {getAdmissionCount(seatIds)} vé
+          </p>
         </div>
       </div>
-      <dl className="checkout-summary-list">
-        <div>
-          <dt>Phân loại</dt>
-          <dd>
-            <span className="rating-badge">{policy.code}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Ngày</dt>
-          <dd>
-            {showtimeStart ? checkoutDate.format(showtimeStart) : "Chưa chọn"}
-          </dd>
-        </div>
-        <div>
-          <dt>Suất chiếu</dt>
-          <dd>
-            {showtimeStart && showtime
-              ? `${checkoutTime.format(showtimeStart)} · ${showtime.format}`
-              : "Chưa chọn"}
-          </dd>
-        </div>
-        <div>
-          <dt>Phòng chiếu</dt>
-          <dd>{showtime?.hall ?? "Chưa chọn"}</dd>
-        </div>
-        <div>
-          <dt>Ghế</dt>
-          <dd>{seatIds.join(", ")}</dd>
-        </div>
-        <div>
-          <dt>Số vé</dt>
-          <dd>{getAdmissionCount(seatIds)}</dd>
-        </div>
-      </dl>
-      {comboLines.length > 0 && (
-        <div className="checkout-lines">
-          <h4>Combo bắp nước</h4>
-          {comboLines.map((line) => (
-            <p key={line.combo.id}>
-              <span>
-                {line.quantity} × {line.combo.name}
-              </span>
-              <b>{money.format(line.combo.unitPrice * line.quantity)}</b>
-            </p>
-          ))}
-        </div>
-      )}
-      <dl className="checkout-summary-list checkout-totals">
+
+      <div className="selected-seat-list" aria-label="Ghế đã chọn">
+        {seatIds.map((seatId) => (
+          <span className="selected-seat-pill" key={seatId}>
+            {seatId}
+          </span>
+        ))}
+      </div>
+
+      <dl className="summary-list">
         <div>
           <dt>Tiền vé</dt>
           <dd>{money.format(seatSubtotal)}</dd>
         </div>
         <div>
           <dt>Combo</dt>
-          <dd>{money.format(comboSubtotal)}</dd>
+          {comboLines.length === 0 && <dd>{money.format(comboSubtotal)}</dd>}
         </div>
+        {comboLines.map((line) => (
+          <div className="summary-combo-line" key={line.combo.id}>
+            <dt>
+              {line.quantity} × {line.combo.name}
+            </dt>
+            <dd>{money.format(line.combo.unitPrice * line.quantity)}</dd>
+          </div>
+        ))}
         <div>
           <dt>Phí dịch vụ</dt>
           <dd>{money.format(serviceFee)}</dd>
