@@ -8,6 +8,7 @@ import {
   ArrowRightIcon,
   CakeIcon,
   CheckIcon,
+  ChevronDownIcon,
   LayoutGridIcon,
   MapPinIcon,
   MinusIcon,
@@ -438,6 +439,11 @@ export function ShowtimePicker({
   dates: readonly string[];
 }) {
   const router = useRouter();
+  const cities = useMemo(
+    () => [...new Set(cinemas.map((cinema) => cinema.cityName))],
+    [cinemas],
+  );
+  const [city, setCity] = useState(cities[0]);
   const [date, setDate] = useState(dates[0]);
   const [brandId, setBrandId] = useState<string | null>(null);
   const [pendingShowtime, setPendingShowtime] = useState<Showtime | null>(null);
@@ -449,16 +455,22 @@ export function ShowtimePicker({
     ? cinemas.find((cinema) => cinema.id === pendingShowtime.cinemaId)
     : null;
 
-  /** Rạp gần khách nhất xếp lên đầu. */
+  /** Rạp trong thành phố đang chọn, rạp gần khách nhất xếp lên đầu. */
   const rankedCinemas = useMemo(
     () =>
       cinemas
+        .filter((cinema) => cinema.cityName === city)
         .map((cinema) => ({
           cinema,
           distanceKm: distanceInKm(coordinates, cinema),
         }))
         .sort((left, right) => left.distanceKm - right.distanceKm),
-    [cinemas, coordinates],
+    [cinemas, city, coordinates],
+  );
+
+  /** Chỉ hiện thương hiệu thật sự có rạp trong thành phố đang chọn. */
+  const cityBrands = brands.filter((brand) =>
+    rankedCinemas.some((entry) => entry.cinema.brandId === brand.id),
   );
 
   const visibleCinemas = brandId
@@ -470,7 +482,29 @@ export function ShowtimePicker({
       <BookingSteps active={1} />
       <div className="booking-content-grid grid gap-6">
         <section className="booking-panel-stack rounded-xl border border-border bg-surface p-5">
-          <div className="date-picker">
+          <div>
+            <div className="booking-city-bar">
+              <div className="filter-select-wrap">
+                <select
+                  aria-label="Lọc rạp theo thành phố"
+                  className="filter-select"
+                  value={city}
+                  onChange={(event) => {
+                    setCity(event.target.value);
+                    setBrandId(null);
+                    setPendingShowtime(null);
+                  }}
+                >
+                  {cities.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+                <span aria-hidden className="filter-select-icon">
+                  <ChevronDownIcon className="size-full" strokeWidth={2.35} />
+                </span>
+              </div>
+            </div>
+            <div className="date-picker">
             {dates.map((value) => {
               const parsed = parseBookingDate(value);
               return (
@@ -489,6 +523,7 @@ export function ShowtimePicker({
                 </button>
               );
             })}
+            </div>
           </div>
 
           <div className="brand-picker">
@@ -505,7 +540,7 @@ export function ShowtimePicker({
               </span>
               <span className="brand-tile-name">Tất cả</span>
             </button>
-            {brands.map((brand) => (
+            {cityBrands.map((brand) => (
               <button
                 key={brand.id}
                 type="button"

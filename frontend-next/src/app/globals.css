@@ -373,6 +373,12 @@
     border-top: 1px solid var(--border);
   }
 
+  .booking-city-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.875rem;
+  }
+
   .date-picker {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -444,13 +450,16 @@
       transform 170ms ease;
   }
 
+  /* Hover giữ tông trung tính để không lẫn với tile đang được chọn. */
   .brand-tile:hover {
-    border-color: rgb(112 127 255 / 70%);
-    background: rgb(95 109 255 / 14%);
+    border-color: rgb(255 255 255 / 30%);
+    background: rgb(255 255 255 / 6%);
     transform: translateY(-0.125rem);
   }
 
-  .brand-tile.is-active {
+  /* Tile đang chọn luôn đúng một màu, kể cả khi đang rê chuột lên. */
+  .brand-tile.is-active,
+  .brand-tile.is-active:hover {
     border-color: rgb(112 127 255 / 74%);
     background: rgb(95 109 255 / 18%);
   }
@@ -495,7 +504,7 @@
   }
 
   .brand-tile.is-active .brand-tile-name {
-    color: white;
+    color: var(--primary-bright);
   }
 
   .cinema-list {
