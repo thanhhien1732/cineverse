@@ -252,7 +252,7 @@ function ShowtimeSelectionSummary({
     <aside className="booking-summary-panel rounded-xl border border-border bg-surface p-5 shadow-cinema">
       <div className="flex items-center gap-2.5 border-b border-border pb-4">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
-          <TicketIcon className="size-[18px]" />
+          <TicketIcon className="size-4.5" />
         </span>
         <div className="grid gap-0.5">
           <p className="text-[.63rem] font-extrabold tracking-[.11em] text-muted-foreground uppercase">
@@ -291,7 +291,7 @@ function ShowtimeSelectionSummary({
 
       <div className="my-3.5 flex items-start gap-2.5 rounded-[10px] border border-cv-primary-bright/20 bg-primary/6 p-3">
         <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-cv-primary-bright/10 text-cv-primary-bright">
-          <CakeIcon className="size-[17px]" />
+          <CakeIcon className="size-4.25" />
         </span>
         <div className="grid gap-1">
           <p className="text-[.71rem] leading-snug text-muted-foreground">
@@ -505,24 +505,24 @@ export function ShowtimePicker({
               </div>
             </div>
             <div className="date-picker">
-            {dates.map((value) => {
-              const parsed = parseBookingDate(value);
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  className={cn("date-chip", value === date && "is-active")}
-                  onClick={() => {
-                    setDate(value);
-                    setPendingShowtime(null);
-                  }}
-                >
-                  <small>{weekdayShort.format(parsed)}</small>
-                  <strong>{value.slice(8, 10)}</strong>
-                  <span>Tháng {value.slice(5, 7)}</span>
-                </button>
-              );
-            })}
+              {dates.map((value) => {
+                const parsed = parseBookingDate(value);
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className={cn("date-chip", value === date && "is-active")}
+                    onClick={() => {
+                      setDate(value);
+                      setPendingShowtime(null);
+                    }}
+                  >
+                    <small>{weekdayShort.format(parsed)}</small>
+                    <strong>{value.slice(8, 10)}</strong>
+                    <span>Tháng {value.slice(5, 7)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
