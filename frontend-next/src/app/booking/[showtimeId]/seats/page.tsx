@@ -36,14 +36,15 @@ async function buildShowtimeSummary(showtimeId: string) {
     return null;
   }
 
-  return [
-    movie.title,
-    cinema.name,
-    fullDate.format(new Date(showtime.startsAt)),
-    `${showtimeStartLabel(showtime)} ~ ${showtimeEndLabel(showtime, movie.durationMinutes)}`,
-    `Phòng chiếu ${showtime.hall}`,
-    showtimeGroupLabel(showtime),
-  ].join(" · ");
+  return {
+    movieTitle: movie.title,
+    posterPath: movie.posterPath,
+    cinemaName: cinema.name,
+    hall: `Phòng chiếu ${showtime.hall}`,
+    dateLabel: fullDate.format(new Date(showtime.startsAt)),
+    timeLabel: `${showtimeStartLabel(showtime)} ~ ${showtimeEndLabel(showtime, movie.durationMinutes)}`,
+    formatLabel: showtimeGroupLabel(showtime),
+  };
 }
 
 export default async function Page({

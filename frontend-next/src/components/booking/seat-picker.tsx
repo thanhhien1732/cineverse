@@ -1,9 +1,19 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CalendarIcon,
+  ClapperboardIcon,
+  ClockIcon,
+  MapPinIcon,
+  ProjectorIcon,
+  TicketIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingSteps } from "@/components/booking/booking-flow";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
@@ -71,6 +81,8 @@ const reservedSeatIds = new Set([
   "J9-J10",
 ]);
 const maximumSeatSelection = 8;
+const minSeatMapZoom = 0.6;
+const maxSeatMapZoom = 2;
 const baseSeatPrice = 95000;
 
 const money = new Intl.NumberFormat("vi-VN", {
@@ -172,10 +184,20 @@ function SeatLegend() {
   );
 }
 
+export interface SeatShowtimeSummary {
+  readonly movieTitle: string;
+  readonly posterPath: string;
+  readonly cinemaName: string;
+  readonly hall: string;
+  readonly dateLabel: string;
+  readonly timeLabel: string;
+  readonly formatLabel: string;
+}
+
 export function SeatPicker({
   showtimeSummary,
 }: {
-  showtimeSummary: string | null;
+  showtimeSummary: SeatShowtimeSummary | null;
 }) {
   const router = useRouter();
   const selectedSeatIds = useBookingStore((state) => state.seatIds);
@@ -185,11 +207,37 @@ export function SeatPicker({
   const clearSeats = useBookingStore((state) => state.clearSeats);
   const [expired, setExpired] = useState(false);
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const seatMapShellRef = useRef<HTMLDivElement>(null);
 
   /** Giữ lại phim đang đặt để quay về đúng bước chọn suất chiếu của phim đó. */
   const showtimesHref = movieId
     ? `/showtimes?movie=${encodeURIComponent(movieId)}`
     : "/showtimes";
+
+  /**
+   * React đăng ký onWheel dưới dạng passive nên preventDefault() không có
+   * tác dụng — phải gắn listener gốc để chặn cuộn trang khi zoom sơ đồ ghế.
+   */
+  useEffect(() => {
+    const shell = seatMapShellRef.current;
+    if (!shell) {
+      return;
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      setZoom((current) =>
+        Math.min(
+          maxSeatMapZoom,
+          Math.max(minSeatMapZoom, current - event.deltaY * 0.0015),
+        ),
+      );
+    };
+
+    shell.addEventListener("wheel", handleWheel, { passive: false });
+    return () => shell.removeEventListener("wheel", handleWheel);
+  }, []);
 
   const handleExpire = useCallback(() => {
     clearSeats();
@@ -244,18 +292,69 @@ export function SeatPicker({
       </Link>
       <div className="seat-context">
         {showtimeSummary && (
-          <p className="seat-showtime-summary">{showtimeSummary}</p>
+          <div className="seat-showtime-card">
+            <Image
+              alt=""
+              aria-hidden
+              className="seat-showtime-poster"
+              height={90}
+              loading="eager"
+              src={showtimeSummary.posterPath}
+              width={60}
+            />
+            <div>
+              <p className="seat-showtime-eyebrow">Suất chiếu đã chọn</p>
+              <h2 className="seat-showtime-title">
+                {showtimeSummary.movieTitle}
+              </h2>
+              <div className="seat-showtime-meta">
+                <span>
+                  <MapPinIcon aria-hidden="true" />
+                  {showtimeSummary.cinemaName}
+                </span>
+                <span>
+                  <ProjectorIcon aria-hidden="true" />
+                  {showtimeSummary.hall}
+                </span>
+                <span>
+                  <CalendarIcon aria-hidden="true" />
+                  {showtimeSummary.dateLabel}
+                </span>
+                <span>
+                  <ClockIcon aria-hidden="true" />
+                  {showtimeSummary.timeLabel}
+                </span>
+                <span>
+                  <ClapperboardIcon aria-hidden="true" />
+                  {showtimeSummary.formatLabel}
+                </span>
+              </div>
+            </div>
+          </div>
         )}
         <SeatHoldTimer durationSeconds={600} onExpire={handleExpire} />
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section>
-          <div className="seat-map-shell">
-            <div className="screen">
-              <span>MÀN HÌNH</span>
-            </div>
-            <div className="seat-map">
-              {seatRows.map((row) => (
+          <div className="seat-map-shell" ref={seatMapShellRef}>
+            {zoom !== 1 && (
+              <button
+                type="button"
+                className="seat-map-zoom-badge"
+                onClick={() => setZoom(1)}
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+            )}
+            <div
+              className="seat-map-zoom"
+              style={{ transform: `scale(${zoom})` }}
+            >
+              <div className="screen">
+                <span>MÀN HÌNH</span>
+              </div>
+              <div className="seat-map">
+                {seatRows.map((row) => (
                 <div className="seat-row" key={row}>
                   <b>{row}</b>
                   <div className="seat-row-inner">
@@ -317,6 +416,7 @@ export function SeatPicker({
                   })}
                 </div>
                 <b>J</b>
+              </div>
               </div>
             </div>
           </div>
