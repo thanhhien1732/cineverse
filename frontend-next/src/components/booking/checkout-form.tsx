@@ -8,10 +8,8 @@ import {
   ArrowLeftIcon,
   CreditCardIcon,
   GiftIcon,
-  LockKeyholeIcon,
   MailIcon,
   PhoneIcon,
-  QrCodeIcon,
   ShieldCheckIcon,
   TicketIcon,
   UserRoundIcon,
@@ -45,7 +43,6 @@ interface CheckoutValues {
   readonly cardNumber: string;
   readonly expiry: string;
   readonly cvv: string;
-  readonly momoPhone: string;
 }
 
 type CheckoutErrors = Partial<Record<keyof CheckoutValues, string>> & {
@@ -63,7 +60,6 @@ const initialCheckoutValues: CheckoutValues = {
   cardNumber: "",
   expiry: "",
   cvv: "",
-  momoPhone: "",
 };
 
 const money = new Intl.NumberFormat("vi-VN", {
@@ -79,8 +75,6 @@ const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
   year: "numeric",
   timeZone: "Asia/Ho_Chi_Minh",
 });
-
-const vietnamesePhonePattern = /^(0|\+84)[0-9]{9,10}$/;
 
 function getSeatPrice(seatId: string) {
   if (seatId.startsWith("J")) {
@@ -121,10 +115,6 @@ function validateCheckout(
     if (!/^\d{3,4}$/.test(values.cvv)) {
       errors.cvv = "Mã CVV cần gồm 3 hoặc 4 chữ số.";
     }
-  } else if (
-    !vietnamesePhonePattern.test(values.momoPhone.replace(/\s/g, ""))
-  ) {
-    errors.momoPhone = "Vui lòng nhập số điện thoại đăng ký MoMo hợp lệ.";
   }
 
   if (!confirmedAgeEligibility) {
@@ -483,21 +473,67 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               </div>
             </div>
             <div className="payment-options">
-              <label className="payment-option">
-                <input
-                  checked={paymentMethod === "card"}
-                  name="paymentMethod"
-                  onChange={() => setPaymentMethod("card")}
-                  type="radio"
-                />
-                <span>
-                  <CreditCardIcon aria-hidden="true" />
+              <div className="payment-option-group">
+                <label className="payment-option">
+                  <input
+                    checked={paymentMethod === "card"}
+                    name="paymentMethod"
+                    onChange={() => setPaymentMethod("card")}
+                    type="radio"
+                  />
                   <span>
-                    <strong>Thẻ ngân hàng</strong>
-                    <small>Visa, Mastercard và thẻ nội địa</small>
+                    <CreditCardIcon aria-hidden="true" />
+                    <span>
+                      <strong>Thẻ ngân hàng</strong>
+                      <small>Visa, Mastercard và thẻ nội địa</small>
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+                <div
+                  className="payment-collapse"
+                  data-open={paymentMethod === "card"}
+                  inert={paymentMethod !== "card"}
+                >
+                  <div className="payment-collapse-inner">
+                    <div className="payment-panel checkout-form-grid">
+                      <label className="form-field form-field-wide">
+                        <span>Số thẻ</span>
+                        <Input
+                          aria-invalid={Boolean(errors.cardNumber) || undefined}
+                          inputMode="numeric"
+                          onChange={setField("cardNumber")}
+                          placeholder="0000 0000 0000 0000"
+                          value={values.cardNumber.replace(/(.{4})/g, "$1 ").trim()}
+                        />
+                        <FieldError message={errors.cardNumber} />
+                      </label>
+                      <label className="form-field">
+                        <span>Ngày hết hạn</span>
+                        <Input
+                          aria-invalid={Boolean(errors.expiry) || undefined}
+                          inputMode="numeric"
+                          onChange={setField("expiry")}
+                          placeholder="MM/YY"
+                          value={values.expiry}
+                        />
+                        <FieldError message={errors.expiry} />
+                      </label>
+                      <label className="form-field">
+                        <span>CVV</span>
+                        <Input
+                          aria-invalid={Boolean(errors.cvv) || undefined}
+                          inputMode="numeric"
+                          onChange={setField("cvv")}
+                          placeholder="•••"
+                          type="password"
+                          value={values.cvv}
+                        />
+                        <FieldError message={errors.cvv} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <label className="payment-option">
                 <input
                   checked={paymentMethod === "momo"}
@@ -506,7 +542,14 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                   type="radio"
                 />
                 <span>
-                  <QrCodeIcon aria-hidden="true" />
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="payment-option-logo"
+                    height={24}
+                    src="/assets/momo/momo-logo.svg"
+                    width={24}
+                  />
                   <span>
                     <strong>Ví MoMo</strong>
                     <small>
@@ -516,72 +559,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
                 </span>
               </label>
             </div>
-            {paymentMethod === "card" ? (
-              <div className="payment-panel checkout-form-grid">
-                <label className="form-field form-field-wide">
-                  <span>Số thẻ</span>
-                  <Input
-                    aria-invalid={Boolean(errors.cardNumber) || undefined}
-                    inputMode="numeric"
-                    onChange={setField("cardNumber")}
-                    placeholder="0000 0000 0000 0000"
-                    value={values.cardNumber.replace(/(.{4})/g, "$1 ").trim()}
-                  />
-                  <FieldError message={errors.cardNumber} />
-                </label>
-                <label className="form-field">
-                  <span>Ngày hết hạn</span>
-                  <Input
-                    aria-invalid={Boolean(errors.expiry) || undefined}
-                    inputMode="numeric"
-                    onChange={setField("expiry")}
-                    placeholder="MM/YY"
-                    value={values.expiry}
-                  />
-                  <FieldError message={errors.expiry} />
-                </label>
-                <label className="form-field">
-                  <span>CVV</span>
-                  <Input
-                    aria-invalid={Boolean(errors.cvv) || undefined}
-                    inputMode="numeric"
-                    onChange={setField("cvv")}
-                    placeholder="•••"
-                    type="password"
-                    value={values.cvv}
-                  />
-                  <FieldError message={errors.cvv} />
-                </label>
-              </div>
-            ) : (
-              <div className="payment-panel momo-panel">
-                <Image
-                  alt="MoMo"
-                  className="momo-brand-image"
-                  height={52}
-                  src="/assets/momo/momo.png"
-                  width={52}
-                />
-                <div>
-                  <strong>Thanh toán trực tuyến qua MoMo</strong>
-                  <p>Một cửa sổ xác nhận QR sẽ mở trước khi phát hành vé.</p>
-                  <b>{money.format(orderTotal)}</b>
-                </div>
-                <label className="form-field form-field-wide">
-                  <span>Số điện thoại đăng ký MoMo</span>
-                  <Input
-                    aria-invalid={Boolean(errors.momoPhone) || undefined}
-                    autoComplete="tel"
-                    inputMode="tel"
-                    onChange={setField("momoPhone")}
-                    placeholder="0912345678"
-                    type="tel"
-                    value={values.momoPhone}
-                  />
-                  <FieldError message={errors.momoPhone} />
-                </label>
-              </div>
-            )}
           </section>
 
           <label className={cn("terms-check", errors.age && "has-error")}>
@@ -629,10 +606,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           <Button className="checkout-submit" type="submit">
             Xác nhận thanh toán · {money.format(orderTotal)}
           </Button>
-          <p className="secure-note">
-            <LockKeyholeIcon aria-hidden="true" className="size-4" />
-            Thông tin thanh toán mock không được lưu trữ.
-          </p>
         </form>
         <CheckoutOrderSummary
           comboSubtotal={comboSubtotal}
@@ -682,17 +655,13 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
             alt="Mã QR dẫn đến trang MoMo Developers"
             className="momo-qr-image"
             height={150}
-            src="/assets/momo/momo-developers-qr.png"
+            src="/assets/momo/momo-qr.png"
             width={150}
           />
           <dl className="momo-modal-summary">
             <div>
               <dt>Số tiền</dt>
               <dd>{money.format(orderTotal)}</dd>
-            </div>
-            <div>
-              <dt>Số điện thoại</dt>
-              <dd>{values.momoPhone}</dd>
             </div>
             <div>
               <dt>Mã giao dịch</dt>
