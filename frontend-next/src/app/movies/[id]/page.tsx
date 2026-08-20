@@ -58,7 +58,7 @@ export default async function MovieDetailPage({
           src={movie.backdropPath}
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,var(--background)_10%,rgb(5_7_13/82%)_56%,rgb(5_7_13/30%)_100%)]" />
-        <div className="detail-layout mx-auto w-full max-w-[85rem] px-page">
+        <div className="detail-layout mx-auto w-full max-w-340 px-page">
           <div className="detail-poster">
             <Image
               alt={`Poster ${movie.title}`}
@@ -114,7 +114,7 @@ export default async function MovieDetailPage({
           </div>
         </div>
       </section>
-      <section className="mx-auto grid w-full max-w-[85rem] gap-12 px-page py-section lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <section className="mx-auto grid w-full max-w-340 gap-12 px-page py-section lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div>
           <h2 className="text-3xl font-black">Về bộ phim</h2>
           <p className="mt-5 text-lg leading-8 text-foreground-muted">
@@ -182,7 +182,7 @@ export default async function MovieDetailPage({
         </aside>
       </section>
       <section className="border-t border-border bg-surface/50">
-        <div className="mx-auto w-full max-w-[85rem] px-page py-section">
+        <div className="mx-auto w-full max-w-340 px-page py-section">
           <div className="home-section-head">
             <div>
               <p className="eyebrow">TIẾP TỤC KHÁM PHÁ</p>
