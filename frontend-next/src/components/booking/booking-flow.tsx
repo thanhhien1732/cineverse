@@ -816,9 +816,9 @@ export function ComboPicker({
           {combos.map((combo) => (
             <article
               key={combo.id}
-              className="rounded-xl border border-border bg-surface p-4"
+              className="overflow-hidden rounded-xl border border-border bg-surface"
             >
-              <div className="relative aspect-video overflow-hidden rounded-lg bg-surface-raised">
+              <div className="relative aspect-[720/440] overflow-hidden bg-surface-raised">
                 <Image
                   alt=""
                   fill
@@ -826,43 +826,50 @@ export function ComboPicker({
                   className="object-cover"
                   sizes="(max-width: 640px) 100vw, 50vw"
                 />
+                {combo.badge && (
+                  <Badge
+                    className="absolute left-3 top-3 bg-background/85 text-foreground uppercase"
+                    variant="outline"
+                  >
+                    {combo.badge}
+                  </Badge>
+                )}
               </div>
-              <div className="mt-4 flex items-start justify-between gap-2">
-                <div>
-                  <h2 className="font-bold">{combo.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {combo.description}
+              <div className="p-4">
+                <h2 className="text-xl font-bold">{combo.name}</h2>
+                <p className="mt-2 min-h-11 text-sm text-muted-foreground">
+                  {combo.description}
+                </p>
+                <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3.5">
+                  <p className="font-semibold text-cv-primary-bright">
+                    {money.format(combo.unitPrice)}
                   </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label={`Giảm ${combo.name}`}
+                      onClick={() =>
+                        setQuantity(combo.id, (quantities[combo.id] ?? 0) - 1)
+                      }
+                    >
+                      <MinusIcon />
+                    </Button>
+                    <span className="min-w-6 text-center">
+                      {quantities[combo.id] ?? 0}
+                    </span>
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label={`Tăng ${combo.name}`}
+                      onClick={() =>
+                        setQuantity(combo.id, (quantities[combo.id] ?? 0) + 1)
+                      }
+                    >
+                      <PlusIcon />
+                    </Button>
+                  </div>
                 </div>
-                {combo.badge && <Badge>{combo.badge}</Badge>}
-              </div>
-              <p className="mt-3 font-semibold">
-                {money.format(combo.unitPrice)}
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  aria-label={`Giảm ${combo.name}`}
-                  onClick={() =>
-                    setQuantity(combo.id, (quantities[combo.id] ?? 0) - 1)
-                  }
-                >
-                  <MinusIcon />
-                </Button>
-                <span className="min-w-6 text-center">
-                  {quantities[combo.id] ?? 0}
-                </span>
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  aria-label={`Tăng ${combo.name}`}
-                  onClick={() =>
-                    setQuantity(combo.id, (quantities[combo.id] ?? 0) + 1)
-                  }
-                >
-                  <PlusIcon />
-                </Button>
               </div>
             </article>
           ))}
