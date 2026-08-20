@@ -26,6 +26,7 @@ import {
   showtimeStartLabel,
 } from "@/lib/showtime-schedule";
 import { useBookingStore } from "@/lib/stores/booking.store";
+import { resolveRatingCode } from "@/lib/age-rating";
 import { cn } from "@/lib/utils";
 import type { Cinema, Combo, Movie, Ticket } from "@/types/domain";
 
@@ -180,6 +181,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
 
     return {
       movieTitle: selectedMovie.title,
+      ratingCode: resolveRatingCode(selectedMovie.ratingLabel),
       posterPath: selectedMovie.posterPath,
       cinemaName: selectedCinema.name,
       hall: `Phòng chiếu ${selectedShowtime.hall}`,

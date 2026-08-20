@@ -1,4 +1,5 @@
 import { SeatPicker } from "@/components/booking/seat-picker";
+import { resolveRatingCode } from "@/lib/age-rating";
 import {
   resolveShowtimeById,
   showtimeEndLabel,
@@ -38,6 +39,7 @@ async function buildShowtimeSummary(showtimeId: string) {
 
   return {
     movieTitle: movie.title,
+    ratingCode: resolveRatingCode(movie.ratingLabel),
     posterPath: movie.posterPath,
     cinemaName: cinema.name,
     hall: `Phòng chiếu ${showtime.hall}`,

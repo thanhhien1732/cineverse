@@ -27,6 +27,7 @@ import { ShowtimeSummaryCard } from "@/components/booking/showtime-summary-card"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { resolveRatingCode } from "@/lib/age-rating";
 import { cn } from "@/lib/utils";
 import { distanceInKm, formatDistance } from "@/lib/geo";
 import {
@@ -857,6 +858,7 @@ export function ComboPicker({
 
     return {
       movieTitle: movie.title,
+      ratingCode: resolveRatingCode(movie.ratingLabel),
       posterPath: movie.posterPath,
       cinemaName: cinema.name,
       hall: `Phòng chiếu ${showtime.hall}`,
