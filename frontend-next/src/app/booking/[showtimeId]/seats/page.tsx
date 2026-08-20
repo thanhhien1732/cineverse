@@ -60,7 +60,7 @@ export default async function Page({
       <p className="text-xs font-bold tracking-[.2em] text-cv-primary-bright uppercase">
         Đặt vé
       </p>
-      <h1 className="mt-3 text-5xl font-black uppercase">Chọn ghế</h1>
+      <h1 className="mt-3 text-5xl font-black uppercase">Chọn ghế ngồi</h1>
       <p className="mt-4 text-muted-foreground">
         Chọn vị trí ngồi phù hợp cho suất chiếu bạn vừa chọn.
       </p>
