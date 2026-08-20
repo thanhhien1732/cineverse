@@ -68,9 +68,6 @@ const money = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 0,
 });
 
-/** Phí dịch vụ tính trên mỗi vé — giống bảng giá của frontend legacy. */
-const serviceFeePerSeat = 5000;
-
 const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
   weekday: "short",
   day: "2-digit",
@@ -208,10 +205,8 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       ),
     [booking.comboQuantities, combos],
   );
-  const serviceFee = getAdmissionCount(booking.seatIds) * serviceFeePerSeat;
   const voucherDiscount = voucherApplied ? Math.min(seatSubtotal, 20000) : 0;
-  const orderTotal =
-    seatSubtotal + comboSubtotal + serviceFee - voucherDiscount;
+  const orderTotal = seatSubtotal + comboSubtotal - voucherDiscount;
 
   const setField = (field: keyof CheckoutValues) => {
     return (event: ChangeEvent<HTMLInputElement>) => {
@@ -582,7 +577,6 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           combos={combos}
           comboQuantities={booking.comboQuantities}
           seatIds={booking.seatIds}
-          serviceFee={serviceFee}
           seatSubtotal={seatSubtotal}
           total={orderTotal}
           voucherDiscount={voucherDiscount}
@@ -653,7 +647,6 @@ function CheckoutOrderSummary({
   seatIds,
   seatSubtotal,
   comboSubtotal,
-  serviceFee,
   voucherDiscount,
   total,
 }: {
@@ -662,7 +655,6 @@ function CheckoutOrderSummary({
   readonly seatIds: readonly string[];
   readonly seatSubtotal: number;
   readonly comboSubtotal: number;
-  readonly serviceFee: number;
   readonly voucherDiscount: number;
   readonly total: number;
 }) {
@@ -711,10 +703,6 @@ function CheckoutOrderSummary({
             <dd>{money.format(line.combo.unitPrice * line.quantity)}</dd>
           </div>
         ))}
-        <div>
-          <dt>Phí dịch vụ</dt>
-          <dd>{money.format(serviceFee)}</dd>
-        </div>
         {voucherDiscount > 0 && (
           <div className="summary-discount">
             <dt>Voucher CINE20</dt>
