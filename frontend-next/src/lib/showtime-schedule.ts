@@ -67,6 +67,7 @@ export function buildShowtimesFor(
       startsAt: `${date}T${time}:00+07:00`,
       format: variant.format,
       audioMode: variant.audioMode,
+      hall: `Cinema ${((seed + timeIndex) % 8) + 1}`,
       basePrice:
         variant.format === "IMAX"
           ? 125000

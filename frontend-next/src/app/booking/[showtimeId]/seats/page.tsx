@@ -1,11 +1,59 @@
 import { SeatPicker } from "@/components/booking/seat-picker";
+import {
+  resolveShowtimeById,
+  showtimeEndLabel,
+  showtimeGroupLabel,
+  showtimeStartLabel,
+} from "@/lib/showtime-schedule";
+import {
+  mockCatalogueRepository,
+  mockShowtimeRepository,
+} from "@/services/mock-repositories";
+
+const fullDate = new Intl.DateTimeFormat("vi-VN", {
+  weekday: "short",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+/** Dòng tóm tắt suất chiếu hiển thị ngay dưới nút quay lại. */
+async function buildShowtimeSummary(showtimeId: string) {
+  const cinemas = await mockShowtimeRepository.findCinemas();
+  const showtime = resolveShowtimeById(showtimeId, cinemas);
+
+  if (!showtime) {
+    return null;
+  }
+
+  const [movie, cinema] = [
+    await mockCatalogueRepository.findMovieById(showtime.movieId),
+    cinemas.find((item) => item.id === showtime.cinemaId),
+  ];
+
+  if (!movie || !cinema) {
+    return null;
+  }
+
+  return [
+    movie.title,
+    cinema.name,
+    fullDate.format(new Date(showtime.startsAt)),
+    `${showtimeStartLabel(showtime)} ~ ${showtimeEndLabel(showtime, movie.durationMinutes)}`,
+    `Phòng chiếu ${showtime.hall}`,
+    showtimeGroupLabel(showtime),
+  ].join(" · ");
+}
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ showtimeId: string }>;
 }) {
-  await params;
+  const { showtimeId } = await params;
+  const summary = await buildShowtimeSummary(decodeURIComponent(showtimeId));
+
   return (
     <section className="mx-auto max-w-340 px-page py-section">
       <p className="text-xs font-bold tracking-[.2em] text-cv-primary-bright uppercase">
@@ -16,7 +64,7 @@ export default async function Page({
         Chọn vị trí ngồi phù hợp cho suất chiếu bạn vừa chọn.
       </p>
       <div className="mt-10">
-        <SeatPicker />
+        <SeatPicker showtimeSummary={summary} />
       </div>
     </section>
   );

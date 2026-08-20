@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRightIcon, TicketIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, TicketIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingSteps } from "@/components/booking/booking-flow";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
@@ -142,7 +143,7 @@ function SeatSelectionSummary({
         disabled={!canContinue}
         onClick={onContinue}
       >
-        Chọn combo
+        Tiếp tục
         <ArrowRightIcon />
       </button>
     </aside>
@@ -171,14 +172,24 @@ function SeatLegend() {
   );
 }
 
-export function SeatPicker() {
+export function SeatPicker({
+  showtimeSummary,
+}: {
+  showtimeSummary: string | null;
+}) {
   const router = useRouter();
   const selectedSeatIds = useBookingStore((state) => state.seatIds);
   const showtimeId = useBookingStore((state) => state.showtimeId);
+  const movieId = useBookingStore((state) => state.movieId);
   const toggleSeat = useBookingStore((state) => state.toggleSeat);
   const clearSeats = useBookingStore((state) => state.clearSeats);
   const [expired, setExpired] = useState(false);
   const [selectionMessage, setSelectionMessage] = useState<string | null>(null);
+
+  /** Giữ lại phim đang đặt để quay về đúng bước chọn suất chiếu của phim đó. */
+  const showtimesHref = movieId
+    ? `/showtimes?movie=${encodeURIComponent(movieId)}`
+    : "/showtimes";
 
   const handleExpire = useCallback(() => {
     clearSeats();
@@ -216,7 +227,7 @@ export function SeatPicker() {
             Thời gian giữ ghế 10 phút đã kết thúc. Vui lòng chọn lại suất chiếu
             để bắt đầu một phiên đặt vé mới.
           </p>
-          <Button className="mt-6" onClick={() => router.push("/showtimes")}>
+          <Button className="mt-6" onClick={() => router.push(showtimesHref)}>
             Chọn lại suất chiếu
           </Button>
         </section>
@@ -227,14 +238,14 @@ export function SeatPicker() {
   return (
     <div>
       <BookingSteps active={2} />
+      <Link className="home-text-link text-link-back" href={showtimesHref}>
+        <ArrowLeftIcon aria-hidden="true" />
+        Quay lại
+      </Link>
       <div className="seat-context">
-        <div>
-          <p className="text-xs font-black tracking-[0.16em] text-primary-bright">
-            CHỌN VỊ TRÍ
-          </p>
-          <h2 className="mt-2 text-2xl font-black">Sơ đồ phòng chiếu</h2>
-          <p>Chọn tối đa {maximumSeatSelection} ghế cho đơn hàng này.</p>
-        </div>
+        {showtimeSummary && (
+          <p className="seat-showtime-summary">{showtimeSummary}</p>
+        )}
         <SeatHoldTimer durationSeconds={600} onExpire={handleExpire} />
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

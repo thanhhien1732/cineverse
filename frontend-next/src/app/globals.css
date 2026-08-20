@@ -60,6 +60,16 @@
     }
   }
 
+  .text-link-back {
+    margin-bottom: 1.25rem;
+  }
+
+  /* Higher specificity than .home-text-link:hover svg so "back" slides left. */
+  .home-text-link.text-link-back:hover svg,
+  .home-text-link.text-link-back:focus-visible svg {
+    transform: translateX(-0.125rem);
+  }
+
   .seat-context {
     display: flex;
     align-items: end;
@@ -68,9 +78,11 @@
     margin-bottom: 1.5rem;
   }
 
-  .seat-context p:last-child {
-    margin-top: 0.625rem;
-    color: var(--muted);
+  .seat-showtime-summary {
+    margin: 0;
+    color: var(--foreground-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
   }
 
   .seat-hold-timer {

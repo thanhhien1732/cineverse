@@ -52,6 +52,7 @@ export interface Showtime {
   readonly startsAt: string;
   readonly format: string;
   readonly audioMode: ShowtimeAudioMode;
+  readonly hall: string;
   readonly basePrice: number;
 }
 
