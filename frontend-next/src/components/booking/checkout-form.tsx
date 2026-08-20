@@ -149,6 +149,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [isMomoModalOpen, setIsMomoModalOpen] = useState(false);
   const [isConfirmingMomo, setIsConfirmingMomo] = useState(false);
+  const [momoReference, setMomoReference] = useState("");
 
   const selectedMovie = movies.find((movie) => movie.id === booking.movieId);
   const selectedShowtime =
@@ -303,6 +304,7 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
     }
 
     if (paymentMethod === "momo") {
+      setMomoReference(`CV-MOMO-${Date.now().toString(36).toUpperCase()}`);
       setIsMomoModalOpen(true);
       return;
     }
@@ -561,7 +563,12 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
             </div>
           </section>
 
-          <label className={cn("terms-check", errors.age && "has-error")}>
+          <label
+            className={cn(
+              "terms-check age-confirm-check",
+              errors.age && "has-error",
+            )}
+          >
             <input
               checked={booking.confirmedAgeEligibility}
               onChange={(event) => {
@@ -603,8 +610,11 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
             </span>
           </label>
           <FieldError message={errors.terms} />
-          <Button className="checkout-submit" type="submit">
-            Xác nhận thanh toán · {money.format(orderTotal)}
+          <Button
+            className="checkout-submit text-[0.77rem] font-extrabold"
+            type="submit"
+          >
+            Xác nhận thanh toán
           </Button>
         </form>
         <CheckoutOrderSummary
@@ -621,9 +631,22 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       </div>
       <AppModal
         description="Mở ứng dụng MoMo và xác nhận yêu cầu thanh toán cho đơn hàng CINEVERSE."
+        descriptionPlacement="body"
+        eyebrow="Cổng thanh toán trực tuyến"
+        lead={
+          <span aria-hidden="true" className="momo-brand-badge">
+            <Image
+              alt=""
+              height={52}
+              src="/assets/momo/momo-logo.svg"
+              width={52}
+            />
+          </span>
+        }
         footer={
           <>
             <Button
+              className="momo-modal-button rounded-full text-[0.77rem] font-extrabold"
               disabled={isConfirmingMomo}
               onClick={() => setIsMomoModalOpen(false)}
               variant="outline"
@@ -631,14 +654,14 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               Hủy giao dịch
             </Button>
             <Button
-              className="momo-confirm-button"
+              className="momo-modal-button momo-confirm-button rounded-full text-[0.77rem] font-extrabold"
               disabled={isConfirmingMomo}
               onClick={() => {
                 setIsConfirmingMomo(true);
                 window.setTimeout(() => issueTicket(), 650);
               }}
             >
-              {isConfirmingMomo ? "Đang xác nhận" : "Xác nhận thanh toán MoMo"}
+              {isConfirmingMomo ? "Đang xác nhận" : "Xác nhận thanh toán"}
             </Button>
           </>
         }
@@ -649,8 +672,8 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
         }}
         open={isMomoModalOpen}
         title="Xác nhận thanh toán MoMo"
-      >
-        <div className="momo-modal-body">
+        bodyClassName="momo-modal-body"
+        bodyLead={
           <Image
             alt="Mã QR dẫn đến trang MoMo Developers"
             className="momo-qr-image"
@@ -658,17 +681,18 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
             src="/assets/momo/momo-qr.png"
             width={150}
           />
-          <dl className="momo-modal-summary">
-            <div>
-              <dt>Số tiền</dt>
-              <dd>{money.format(orderTotal)}</dd>
-            </div>
-            <div>
-              <dt>Mã giao dịch</dt>
-              <dd>CV-MOMO-MOCK</dd>
-            </div>
-          </dl>
-        </div>
+        }
+      >
+        <dl className="momo-modal-summary">
+          <div>
+            <dt>Số tiền</dt>
+            <dd>{money.format(orderTotal)}</dd>
+          </div>
+          <div>
+            <dt>Mã giao dịch</dt>
+            <dd>{momoReference}</dd>
+          </div>
+        </dl>
       </AppModal>
     </div>
   );

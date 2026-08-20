@@ -145,7 +145,7 @@ export function MemberProfile({
               onClick={handleAvatarRemove}
               type="button"
             >
-              <Trash2Icon aria-hidden="true" className="size-[0.9375rem]" />
+              <Trash2Icon aria-hidden="true" className="size-3.75" />
               Xóa ảnh
             </button>
           ) : null}
@@ -182,7 +182,7 @@ export function MemberProfile({
           }}
           type="button"
         >
-          <LogOutIcon aria-hidden="true" className="size-[1.125rem]" />
+          <LogOutIcon aria-hidden="true" className="size-4.5" />
           Đăng xuất
         </button>
       </aside>
@@ -243,7 +243,7 @@ export function MemberProfile({
             {wallet.vouchers.map((voucher) => (
               <article key={voucher.id}>
                 <span>
-                  <GiftIcon aria-hidden="true" className="size-[1.125rem]" />
+                  <GiftIcon aria-hidden="true" className="size-4.5" />
                 </span>
                 <div>
                   <strong>{voucher.label}</strong>
@@ -307,7 +307,7 @@ export function MemberProfile({
               </div>
               <div className="profile-status birthday-tooltip" role="tooltip">
                 <span>
-                  <CakeIcon aria-hidden="true" className="size-[1.375rem]" />
+                  <CakeIcon aria-hidden="true" className="size-5.5" />
                 </span>
                 <div>
                   <strong>Thông tin cá nhân đã xác thực</strong>
@@ -324,7 +324,7 @@ export function MemberProfile({
             disabled={!isProfileDirty}
             type="submit"
           >
-            <PencilIcon aria-hidden="true" className="size-[1.125rem]" />
+            <PencilIcon aria-hidden="true" className="size-4.5" />
             Lưu thay đổi
           </button>
         </form>
@@ -364,19 +364,19 @@ export function MemberProfile({
               className="cv-btn cv-btn-ghost"
               href={`/ticket/${latestTicket.id}`}
             >
-              <TicketIcon aria-hidden="true" className="size-[1.125rem]" />
+              <TicketIcon aria-hidden="true" className="size-4.5" />
               Mở vé gần nhất
             </Link>
           ) : (
             <Link className="cv-btn cv-btn-ghost" href="/movies">
-              <TicketIcon aria-hidden="true" className="size-[1.125rem]" />
+              <TicketIcon aria-hidden="true" className="size-4.5" />
               Đặt vé ngay
             </Link>
           )}
           {nextPath ? (
             <Link className="cv-btn cv-btn-primary" href={nextPath}>
-              Tiếp tục thanh toán
-              <ArrowRightIcon aria-hidden="true" className="size-[1.125rem]" />
+              Tiếp tục
+              <ArrowRightIcon aria-hidden="true" className="size-4.5" />
             </Link>
           ) : null}
         </div>

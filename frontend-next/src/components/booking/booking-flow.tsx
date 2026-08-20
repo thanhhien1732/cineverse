@@ -818,7 +818,7 @@ function ComboSelectionSummary({
         disabled={!seatIds.length}
         onClick={onContinue}
       >
-        Tiếp tục thanh toán
+        Tiếp tục
         <ArrowRightIcon />
       </button>
     </aside>
@@ -891,9 +891,9 @@ export function ComboPicker({
               key={combo.id}
               className={cn(
                 "overflow-hidden rounded-3xl border border-border bg-surface transition duration-200 ease-out",
-                "hover:-translate-y-[0.3125rem] hover:border-primary/50 hover:shadow-cinema",
+                "hover:-translate-y-1.25 hover:border-primary/50 hover:shadow-cinema",
                 (quantities[combo.id] ?? 0) > 0 &&
-                  "border-primary/75 bg-primary/8",
+                "border-primary/75 bg-primary/8",
               )}
             >
               <div className="relative aspect-720/440 overflow-hidden bg-surface-raised">
