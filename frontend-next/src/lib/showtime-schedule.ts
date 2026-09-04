@@ -114,15 +114,26 @@ export function resolveShowtimeById(
   );
 }
 
+/** Suất chiếu ngừng nhận đặt vé trước giờ chiếu bao nhiêu phút. */
+export const BOOKING_CUTOFF_MINUTES = 15;
+
 /**
- * Suất chiếu đã qua giờ bắt đầu thì ngừng bán vé. `now` là `null` khi phía
- * client chưa đọc được đồng hồ (lần render đầu) — khi đó chưa loại suất nào.
+ * Suất chiếu đóng bán vé từ `BOOKING_CUTOFF_MINUTES` phút trước giờ chiếu,
+ * không chỉ khi đã chiếu xong giờ đó. `now` là `null` khi phía client chưa
+ * đọc được đồng hồ (lần render đầu) — khi đó chưa loại suất nào.
  */
-export function hasShowtimeStarted(
+export function isBookingClosed(
   showtime: Showtime,
   now: number | null,
 ): boolean {
-  return now !== null && new Date(showtime.startsAt).getTime() <= now;
+  if (now === null) {
+    return false;
+  }
+
+  const cutoffAt =
+    new Date(showtime.startsAt).getTime() - BOOKING_CUTOFF_MINUTES * 60000;
+
+  return now >= cutoffAt;
 }
 
 /** Nhãn nhóm suất chiếu, ví dụ `2D Phụ đề`. */

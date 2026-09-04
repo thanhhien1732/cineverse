@@ -11,6 +11,7 @@ import {
   type BookingShowtimeSummary,
 } from "@/components/booking/showtime-summary-card";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
+import { BOOKING_CUTOFF_MINUTES } from "@/lib/showtime-schedule";
 import { useNow } from "@/lib/use-now";
 import { usePanZoom } from "@/lib/use-pan-zoom";
 import { useBookingStore } from "@/lib/stores/booking.store";
@@ -214,11 +215,12 @@ export function SeatPicker({
     : "/showtimes";
 
   const now = useNow();
-  /** Đơn đang dở nhưng suất chiếu đã tới giờ thì hủy luôn phiên chọn ghế. */
-  const showtimeStarted = Boolean(
+  /** Đơn đang dở nhưng suất chiếu đã đóng bán vé thì hủy luôn phiên chọn ghế. */
+  const bookingClosed = Boolean(
     showtimeStartsAt &&
       now !== null &&
-      new Date(showtimeStartsAt).getTime() <= now,
+      new Date(showtimeStartsAt).getTime() - BOOKING_CUTOFF_MINUTES * 60000 <=
+        now,
   );
 
   const handleExpire = useCallback(() => {
@@ -241,7 +243,7 @@ export function SeatPicker({
     setSelectionMessage(null);
   };
 
-  if (showtimeStarted) {
+  if (bookingClosed) {
     return (
       <div>
         <BookingSteps active={2} />
@@ -250,12 +252,13 @@ export function SeatPicker({
           className="mx-auto max-w-2xl rounded-xl border border-destructive/40 bg-destructive/10 p-8 text-center"
         >
           <p className="text-xs font-black tracking-[0.16em] text-destructive">
-            SUẤT CHIẾU ĐÃ BẮT ĐẦU
+            SUẤT CHIẾU ĐÃ ĐÓNG BÁN VÉ
           </p>
           <h2 className="mt-3 text-2xl font-black">Đơn đặt vé đã được hủy</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Suất chiếu bạn chọn đã qua giờ chiếu nên không thể tiếp tục đặt vé.
-            Vui lòng chọn một suất chiếu khác.
+            Suất chiếu bạn chọn đã ngừng nhận đặt vé (đóng trước giờ chiếu 15
+            phút) nên không thể tiếp tục đặt vé. Vui lòng chọn một suất chiếu
+            khác.
           </p>
           <Button className="mt-6" onClick={() => router.push(showtimesHref)}>
             Chọn lại suất chiếu

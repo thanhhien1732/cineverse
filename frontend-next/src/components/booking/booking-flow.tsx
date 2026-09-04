@@ -34,7 +34,7 @@ import { distanceInKm, formatDistance } from "@/lib/geo";
 import {
   buildShowtimesFor,
   resolveShowtimeById,
-  hasShowtimeStarted,
+  isBookingClosed,
   showtimeEndLabel,
   showtimeGroupLabel,
   showtimeStartLabel,
@@ -376,12 +376,12 @@ function CinemaShowtimes({
     [cinema, date, movie],
   );
 
-  /** Suất đã tới giờ chiếu bị loại khỏi danh sách ngay khi đồng hồ nhảy. */
+  /** Suất đã đóng bán vé bị loại khỏi danh sách ngay khi đồng hồ nhảy. */
   const groups = useMemo(() => {
     const byLabel = new Map<string, Showtime[]>();
 
     for (const showtime of schedule) {
-      if (hasShowtimeStarted(showtime, now)) {
+      if (isBookingClosed(showtime, now)) {
         continue;
       }
 
@@ -498,9 +498,9 @@ export function ShowtimePicker({
   const selectShowtime = useBookingStore((state) => state.selectShowtime);
   const { coordinates } = useViewerLocation();
   const now = useNow();
-  /** Suất đang chọn mà trôi qua giờ chiếu thì coi như chưa chọn gì. */
+  /** Suất đang chọn mà đã đóng bán vé thì coi như chưa chọn gì. */
   const activeShowtime =
-    pendingShowtime && !hasShowtimeStarted(pendingShowtime, now)
+    pendingShowtime && !isBookingClosed(pendingShowtime, now)
       ? pendingShowtime
       : null;
 
@@ -870,9 +870,9 @@ export function ComboPicker({
     : "/showtimes";
 
   const selectedShowtime = resolveShowtimeById(showtimeId, cinemas);
-  /** Suất chiếu đã tới giờ thì dừng luôn bước chọn combo. */
-  const showtimeStarted = Boolean(
-    selectedShowtime && hasShowtimeStarted(selectedShowtime, now),
+  /** Suất chiếu đã đóng bán vé thì dừng luôn bước chọn combo. */
+  const bookingClosed = Boolean(
+    selectedShowtime && isBookingClosed(selectedShowtime, now),
   );
 
   const showtimeSummary = useMemo(() => {
@@ -901,7 +901,7 @@ export function ComboPicker({
     };
   }, [cinemas, movies, showtimeId]);
 
-  if (showtimeStarted) {
+  if (bookingClosed) {
     return (
       <div>
         <BookingSteps active={3} />
@@ -910,12 +910,13 @@ export function ComboPicker({
           className="mx-auto max-w-2xl rounded-xl border border-destructive/40 bg-destructive/10 p-8 text-center"
         >
           <p className="text-xs font-black tracking-[0.16em] text-destructive">
-            SUẤT CHIẾU ĐÃ BẮT ĐẦU
+            SUẤT CHIẾU ĐÃ ĐÓNG BÁN VÉ
           </p>
           <h2 className="mt-3 text-2xl font-black">Đơn đặt vé đã được hủy</h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Suất chiếu bạn chọn đã qua giờ chiếu nên không thể tiếp tục đặt vé.
-            Vui lòng chọn một suất chiếu khác.
+            Suất chiếu bạn chọn đã ngừng nhận đặt vé (đóng trước giờ chiếu 15
+            phút) nên không thể tiếp tục đặt vé. Vui lòng chọn một suất chiếu
+            khác.
           </p>
           <Button
             className="mt-6"

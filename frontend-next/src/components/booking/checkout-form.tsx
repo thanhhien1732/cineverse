@@ -21,7 +21,7 @@ import { useFeedback } from "@/components/feedback/feedback-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  hasShowtimeStarted,
+  isBookingClosed,
   resolveShowtimeById,
   showtimeEndLabel,
   showtimeGroupLabel,
@@ -228,9 +228,9 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
     (cinema) => cinema.id === selectedShowtime?.cinemaId,
   );
   const now = useNow();
-  /** Không cho thanh toán một suất chiếu đã qua giờ chiếu. */
-  const showtimeStarted = Boolean(
-    selectedShowtime && hasShowtimeStarted(selectedShowtime, now),
+  /** Không cho thanh toán một suất chiếu đã đóng bán vé. */
+  const bookingClosed = Boolean(
+    selectedShowtime && isBookingClosed(selectedShowtime, now),
   );
   const showtimeSummary = useMemo(() => {
     if (!selectedShowtime || !selectedMovie || !selectedCinema) {
@@ -444,14 +444,15 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
     );
   }
 
-  if (showtimeStarted) {
+  if (bookingClosed) {
     return (
       <section aria-live="assertive" className="checkout-empty-state">
         <TicketIcon aria-hidden="true" className="size-8 text-destructive" />
-        <h2>Suất chiếu đã bắt đầu</h2>
+        <h2>Suất chiếu đã đóng bán vé</h2>
         <p>
-          Suất chiếu bạn chọn đã qua giờ chiếu nên đơn hàng không còn hiệu lực.
-          Hãy chọn một suất chiếu khác để tiếp tục đặt vé.
+          Suất chiếu bạn chọn đã ngừng nhận đặt vé (đóng trước giờ chiếu 15
+          phút) nên đơn hàng không còn hiệu lực. Hãy chọn một suất chiếu khác
+          để tiếp tục đặt vé.
         </p>
         <Link
           href={
