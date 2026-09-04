@@ -14,6 +14,7 @@ import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
 import { BOOKING_CUTOFF_MINUTES } from "@/lib/showtime-schedule";
 import { useNow } from "@/lib/use-now";
 import { usePanZoom } from "@/lib/use-pan-zoom";
+import { useSeatLocks } from "@/lib/use-seat-locks";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
 import type { Seat } from "@/types/domain";
@@ -177,6 +178,9 @@ function SeatLegend() {
       <span>
         <i className="legend-reserved" /> Đã đặt
       </span>
+      <span>
+        <i className="legend-held" /> Người khác đang giữ
+      </span>
     </div>
   );
 }
@@ -223,14 +227,53 @@ export function SeatPicker({
         now,
   );
 
+  /** Ghế bị phiên khác giành mất sẽ tự rời khỏi lựa chọn kèm thông báo. */
+  const handleSeatsLost = useCallback(
+    (lostSeatIds: readonly string[]) => {
+      // Đọc thẳng state mới nhất để không bỏ chọn nhầm ghế vừa được thả ra.
+      const currentSeatIds = useBookingStore.getState().seatIds;
+      const lostFromSelection = lostSeatIds.filter((seatId) =>
+        currentSeatIds.includes(seatId),
+      );
+
+      if (!lostFromSelection.length) {
+        return;
+      }
+
+      for (const seatId of lostFromSelection) {
+        toggleSeat(seatId);
+      }
+
+      setSelectionMessage(
+        `Ghế ${lostFromSelection.join(", ")} vừa được người khác giữ trước. Vui lòng chọn ghế khác.`,
+      );
+    },
+    [toggleSeat],
+  );
+
+  const { seatIdsHeldByOthers, releaseAll } = useSeatLocks({
+    showtimeId,
+    selectedSeatIds,
+    onSeatsLost: handleSeatsLost,
+  });
+  const heldByOthers = new Set(seatIdsHeldByOthers);
+
   const handleExpire = useCallback(() => {
     clearSeats();
+    releaseAll();
     setSelectionMessage(null);
     setExpired(true);
-  }, [clearSeats]);
+  }, [clearSeats, releaseAll]);
 
   const handleSeatToggle = (seatId: string) => {
     const isSelected = selectedSeatIds.includes(seatId);
+
+    if (!isSelected && heldByOthers.has(seatId)) {
+      setSelectionMessage(
+        "Ghế này đang có người khác giữ. Vui lòng chọn ghế khác.",
+      );
+      return;
+    }
 
     if (!isSelected && selectedSeatIds.length >= maximumSeatSelection) {
       setSelectionMessage(
@@ -295,7 +338,11 @@ export function SeatPicker({
   return (
     <div>
       <BookingSteps active={2} />
-      <Link className="home-text-link text-link-back" href={showtimesHref}>
+      <Link
+        className="home-text-link text-link-back"
+        href={showtimesHref}
+        onClick={releaseAll}
+      >
         <ArrowLeftIcon aria-hidden="true" />
         Quay lại
       </Link>
@@ -340,21 +387,24 @@ export function SeatPicker({
                       .map((seat, index) => {
                         const isReserved = reservedSeatIds.has(seat.id);
                         const isSelected = selectedSeatIds.includes(seat.id);
+                        const isHeldByOther =
+                          !isReserved && heldByOthers.has(seat.id);
 
                         return (
                           <div className="contents" key={seat.id}>
                             {index === 6 && <span className="seat-aisle" />}
                             <button
                               type="button"
-                              aria-label={`Ghế ${seat.label}${isReserved ? ", đã đặt" : ""}`}
+                              aria-label={`Ghế ${seat.label}${isReserved ? ", đã đặt" : ""}${isHeldByOther ? ", người khác đang giữ" : ""}`}
                               aria-pressed={isSelected}
                               className={cn(
                                 "seat",
                                 `seat-${seat.kind}`,
                                 isSelected && "is-selected",
                                 isReserved && "is-reserved",
+                                isHeldByOther && "is-held",
                               )}
-                              disabled={isReserved}
+                              disabled={isReserved || isHeldByOther}
                               onClick={() => handleSeatToggle(seat.id)}
                             >
                               <span>{seat.label}</span>
@@ -372,18 +422,21 @@ export function SeatPicker({
                   {coupleSeats.map((seat) => {
                     const isReserved = reservedSeatIds.has(seat.id);
                     const isSelected = selectedSeatIds.includes(seat.id);
+                    const isHeldByOther =
+                      !isReserved && heldByOthers.has(seat.id);
 
                     return (
                       <button
                         type="button"
-                        aria-label={`Ghế đôi ${seat.label}${isReserved ? ", đã đặt" : ""}`}
+                        aria-label={`Ghế đôi ${seat.label}${isReserved ? ", đã đặt" : ""}${isHeldByOther ? ", người khác đang giữ" : ""}`}
                         aria-pressed={isSelected}
                         className={cn(
                           "seat seat-couple",
                           isSelected && "is-selected",
                           isReserved && "is-reserved",
+                          isHeldByOther && "is-held",
                         )}
-                        disabled={isReserved}
+                        disabled={isReserved || isHeldByOther}
                         key={seat.id}
                         onClick={() => handleSeatToggle(seat.id)}
                       >

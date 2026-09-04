@@ -71,12 +71,15 @@ export class PaymentService {
       return { bookingId, status: updated.paymentStatus, transactionId };
     }
 
-    // Thất bại
+    // Thất bại: nhả ghế ngay để người khác đặt được, không đợi job dọn dẹp.
     const updated = await this.prisma.bookings.update({
       where: { bookingId },
       data: {
         paymentStatus: $Enums.Bookings_paymentStatus.CANCELED,
         transactionId,
+        isBooked: false,
+        bookingDateTime: null,
+        bookingSlot: null,
       },
     });
 

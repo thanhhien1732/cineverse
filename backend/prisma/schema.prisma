@@ -286,6 +286,11 @@ model Bookings {
   paymentMethod   Bookings_paymentMethod?
   transactionId   String?                 @db.VarChar(100)
   paidAt          DateTime?               @db.Timestamp(0)
+  /// Khoá chống đặt trùng: "showtimeId:seatId" khi ghế đang được giữ hoặc đã
+  /// thanh toán, NULL khi booking bị huỷ. MySQL cho phép nhiều NULL trong unique
+  /// index nên ghế huỷ vẫn đặt lại được, còn hai request cùng lúc thì chỉ một
+  /// request insert thành công.
+  bookingSlot     String?                 @unique(map: "uq_bookings_slot") @db.VarChar(64)
   Seats           Seats                   @relation(fields: [seatId], references: [seatId], onDelete: Cascade, map: "Tickets_seatId_fkey")
   Showtimes       Showtimes               @relation(fields: [showtimeId], references: [showtimeId], onDelete: Cascade, map: "Tickets_showtimeId_fkey")
   Users           Users                   @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "Tickets_userId_fkey")

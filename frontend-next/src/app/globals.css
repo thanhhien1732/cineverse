@@ -43,6 +43,17 @@
   }
 }
 
+@keyframes seat-held-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
 @keyframes hero-scale {
   from {
     transform: scale(1.03);
@@ -348,6 +359,16 @@
     opacity: 0;
   }
 
+  /* Ghế phiên khác đang giữ: khoá lại nhưng vẫn đọc được số ghế. */
+  .seat.is-held {
+    border-color: rgb(255 191 105 / 45%);
+    border-style: dashed;
+    background: rgb(255 191 105 / 9%);
+    color: rgb(255 191 105 / 62%);
+    cursor: not-allowed;
+    animation: seat-held-pulse 1.8s ease-in-out infinite;
+  }
+
   .seat-legend {
     display: flex;
     flex-wrap: wrap;
@@ -384,6 +405,12 @@
   .seat-legend .legend-selected {
     border-color: var(--primary-bright);
     background: #6788ff;
+  }
+
+  .seat-legend .legend-held {
+    border-color: rgb(255 191 105 / 45%);
+    border-style: dashed;
+    background: rgb(255 191 105 / 12%);
   }
 
   .seat-legend .legend-reserved {
@@ -2463,6 +2490,16 @@
 
   .staff-brand {
     justify-self: center;
+  }
+
+  .staff-brand img {
+    width: min(100%, 17.875rem);
+    height: auto;
+  }
+
+  .gate-brand img {
+    width: 13.125rem;
+    height: auto;
   }
 
   .staff-login-card {

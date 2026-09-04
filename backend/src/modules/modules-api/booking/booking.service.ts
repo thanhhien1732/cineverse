@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
 import { PrismaService } from 'src/modules/modules-system/prisma/prisma.service';
+import { buildSeatLockKey, SEAT_HOLD_MINUTES } from 'src/common/helpers/seat-lock.helper';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { FindAllBookingDto } from './dto/find-all-booking.dto';
+
+/** Mã lỗi Prisma khi một UNIQUE INDEX bị vi phạm. */
+const UNIQUE_VIOLATION = 'P2002';
 
 @Injectable()
 export class BookingService {
@@ -34,36 +39,14 @@ export class BookingService {
     const seatMultiplier = Number(seat.SeatTypes?.multiplier ?? 1);
     const seatPrice = Math.round(Number(showtime.basePrice) * seatMultiplier);
 
-    const booking = await this.prisma.bookings.create({
-      data: {
-        userId,
-        showtimeId: dto.showtimeId,
-        seatId: dto.seatId,
-        seatPrice,
-        isBooked: true,
-        paymentStatus: 'PENDING',
-        bookingDateTime: new Date(),
-      },
-      include: {
-        Users: { select: { fullName: true, email: true } },
-        Showtimes: {
-          select: {
-            Movies: { select: { movieName: true } },
-            Cinemas: { select: { cinemaName: true, address: true } },
-            Rooms: { select: { roomName: true } },
-            showDate: true,
-            showTimeStart: true,
-            showTimeEnd: true,
-            durationMinutes: true,
-          },
-        },
-        Seats: {
-          select: {
-            seatName: true,
-            SeatTypes: { select: { seatTypeName: true } }
-          },
-        },
-      },
+    // Kiểm tra ở trên chỉ để trả lỗi thân thiện. Chốt chặn thật nằm ở UNIQUE
+    // INDEX của cột `bookingSlot`: hai request đồng thời cùng vượt qua bước
+    // kiểm tra thì CSDL vẫn chỉ cho đúng một request ghi được ghế.
+    const booking = await this.createWithSeatLock({
+      userId,
+      showtimeId: dto.showtimeId,
+      seatId: dto.seatId,
+      seatPrice,
     });
 
     return {
@@ -83,6 +66,138 @@ export class BookingService {
       paymentStatus: booking.paymentStatus,
       isBooked: booking.isBooked,
       bookingDateTime: booking.bookingDateTime,
+      holdExpiresAt: booking.bookingDateTime
+        ? new Date(booking.bookingDateTime.getTime() + SEAT_HOLD_MINUTES * 60_000)
+        : null,
+    };
+  }
+
+  /**
+   * Ghi booking và để UNIQUE INDEX `uq_bookings_slot` làm trọng tài khi nhiều
+   * người cùng chọn một ghế. Request thua cuộc nhận 409 thay vì tạo vé trùng.
+   */
+  private async createWithSeatLock(input: {
+    userId: number;
+    showtimeId: number;
+    seatId: number;
+    seatPrice: number;
+  }) {
+    try {
+      return await this.prisma.bookings.create({
+        data: {
+          userId: input.userId,
+          showtimeId: input.showtimeId,
+          seatId: input.seatId,
+          seatPrice: input.seatPrice,
+          isBooked: true,
+          paymentStatus: 'PENDING',
+          bookingDateTime: new Date(),
+          bookingSlot: buildSeatLockKey(input.showtimeId, input.seatId),
+        },
+        include: {
+          Users: { select: { fullName: true, email: true } },
+          Showtimes: {
+            select: {
+              Movies: { select: { movieName: true } },
+              Cinemas: { select: { cinemaName: true, address: true } },
+              Rooms: { select: { roomName: true } },
+              showDate: true,
+              showTimeStart: true,
+              showTimeEnd: true,
+              durationMinutes: true,
+            },
+          },
+          Seats: {
+            select: {
+              seatName: true,
+              SeatTypes: { select: { seatTypeName: true } }
+            },
+          },
+        },
+      });
+    } catch (error) {
+      const isSeatTaken =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === UNIQUE_VIOLATION;
+
+      if (isSeatTaken) {
+        throw new ConflictException(
+          'Ghế này vừa được người khác giữ. Vui lòng chọn ghế khác!',
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  // ------------------ SEAT MAP ------------------
+  /**
+   * Trạng thái từng ghế của một suất chiếu để client vẽ sơ đồ ghế theo thời
+   * gian thực: ghế người khác đang giữ sẽ bị khoá ngay trên giao diện thay vì
+   * để người dùng chọn rồi mới báo lỗi lúc thanh toán.
+   */
+  async getSeatMap(showtimeId: number, userId?: number) {
+    const showtime = await this.prisma.showtimes.findUnique({
+      where: { showtimeId },
+    });
+
+    if (!showtime) throw new NotFoundException('Showtime not found!');
+
+    const [seats, activeBookings] = await Promise.all([
+      this.prisma.seats.findMany({
+        where: { isDeleted: false },
+        select: {
+          seatId: true,
+          seatName: true,
+          rowLabel: true,
+          columnIndex: true,
+          SeatTypes: { select: { seatTypeName: true } },
+        },
+        orderBy: [{ rowLabel: 'asc' }, { columnIndex: 'asc' }],
+      }),
+      this.prisma.bookings.findMany({
+        where: { showtimeId, bookingSlot: { not: null } },
+        select: {
+          seatId: true,
+          userId: true,
+          paymentStatus: true,
+          bookingDateTime: true,
+        },
+      }),
+    ]);
+
+    const bookingBySeatId = new Map(
+      activeBookings.map((booking) => [booking.seatId, booking]),
+    );
+
+    return {
+      showtimeId,
+      holdMinutes: SEAT_HOLD_MINUTES,
+      seats: seats.map((seat) => {
+        const booking = bookingBySeatId.get(seat.seatId);
+        const status = !booking
+          ? 'AVAILABLE'
+          : booking.paymentStatus === 'PAID'
+            ? 'BOOKED'
+            : 'HELD';
+
+        return {
+          seatId: seat.seatId,
+          seatName: seat.seatName,
+          rowLabel: seat.rowLabel,
+          columnIndex: seat.columnIndex,
+          seatType: seat.SeatTypes?.seatTypeName ?? null,
+          status,
+          /** Ghế do chính người đang xem giữ thì vẫn cho phép thao tác tiếp. */
+          heldByMe: Boolean(booking && userId && booking.userId === userId),
+          holdExpiresAt:
+            status === 'HELD' && booking?.bookingDateTime
+              ? new Date(
+                booking.bookingDateTime.getTime() + SEAT_HOLD_MINUTES * 60_000,
+              )
+              : null,
+        };
+      }),
     };
   }
 
@@ -224,6 +339,8 @@ export class BookingService {
         isBooked: false,
         paymentStatus: 'CANCELED',
         bookingDateTime: null,
+        // Nhả khoá ghế để người khác đặt lại được.
+        bookingSlot: null,
       },
       include: {
         Users: { select: { fullName: true } },

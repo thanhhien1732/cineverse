@@ -21,6 +21,19 @@ export class BookingController {
     return this.service.create(user.userId, dto);
   }
 
+  // ------------------ SEAT MAP ------------------
+  @Get('showtime/:showtimeId/seat-map')
+  @ApiOperation({
+    summary: 'Seat availability of a showtime (AVAILABLE / HELD / BOOKED)',
+  })
+  @MessageResponse('Seat map retrieved successfully!')
+  seatMap(
+    @User() user: Users,
+    @Param('showtimeId', ParseIntPipe) showtimeId: number,
+  ) {
+    return this.service.getSeatMap(showtimeId, user?.userId);
+  }
+
   // ------------------ FIND ALL ------------------
   @Get()
   @ApiOperation({ summary: 'Get all bookings (with filters and pagination)' })

@@ -1,6 +1,7 @@
 "use client";
 
 import jsQR from "jsqr";
+import NextImage from "next/image";
 import Link from "next/link";
 import {
   CameraIcon,
@@ -26,6 +27,11 @@ import {
 import { useFeedback } from "@/components/feedback/feedback-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  createInitialAdmin,
+  hasAdmin,
+  loginStaff,
+} from "@/lib/staff-accounts";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { useStaffStore } from "@/lib/stores/staff.store";
 import type { Ticket, TicketStatus } from "@/types/domain";
@@ -77,13 +83,8 @@ function GateShell({ children }: { readonly children: ReactNode }) {
     <main className="staff-body min-h-screen">
       <header className="gate-header">
         <div className="gate-header-inner mx-auto w-full max-w-340 px-page">
-          <Link aria-label="Cineverse" className="gate-brand" href="/">
-            <span className="font-black tracking-[-0.08em]">
-              CINE<span className="text-primary">VERSE</span>
-            </span>
-            <span className="ml-3 text-[0.625rem] font-black tracking-[0.16em] text-muted-foreground">
-              GATE CONTROL
-            </span>
+          <Link aria-label="CINEVERSE" className="gate-brand" href="/">
+            <NextImage alt="CINEVERSE" height={53} priority src="/assets/logo.svg" width={236} />
           </Link>
           {profile ? (
             <div className="gate-header-tools">
@@ -114,74 +115,179 @@ function GateShell({ children }: { readonly children: ReactNode }) {
   );
 }
 
+const staffFieldInputClass = "h-12 rounded-[0.625rem] px-3 text-base";
+
 function StaffLoginForm() {
   const signIn = useStaffStore((state) => state.signIn);
   const { notify } = useFeedback();
   const [message, setMessage] = useState("");
+  const [needsSetup] = useState(() => !hasAdmin());
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleCreateAdmin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const fullName = String(form.get("fullName") ?? "").trim();
-    const email = String(form.get("email") ?? "").trim();
-    const password = String(form.get("password") ?? "");
+    const result = createInitialAdmin({
+      fullName: String(form.get("fullName") ?? ""),
+      email: String(form.get("email") ?? ""),
+      password: String(form.get("password") ?? ""),
+      confirmPassword: String(form.get("confirmPassword") ?? ""),
+    });
 
-    if (fullName.length < 2 || !email || password.length < 4) {
-      const nextMessage =
-        "Vui lòng nhập đủ họ tên, email và mật khẩu nhân viên.";
-      setMessage(nextMessage);
-      notify(nextMessage, "error");
+    if (!result.ok) {
+      setMessage(result.error);
+      notify(result.error, "error");
       return;
     }
 
-    signIn({ fullName, email, role: "gate-control-admin" });
+    signIn({
+      fullName: result.user.fullName,
+      email: result.user.email,
+      role: "gate-control-admin",
+    });
+    notify("Đã tạo tài khoản quản trị và mở phiên kiểm soát vé.");
+  }
+
+  function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const result = loginStaff(
+      String(form.get("email") ?? ""),
+      String(form.get("password") ?? ""),
+    );
+
+    if (!result.ok) {
+      setMessage(result.error);
+      notify(result.error, "error");
+      return;
+    }
+
+    signIn({
+      fullName: result.user.fullName,
+      email: result.user.email,
+      role: "gate-control-admin",
+    });
     notify("Đã mở phiên kiểm soát vé cho nhân viên.");
   }
 
   return (
     <main className="staff-login-page">
       <section className="staff-login-shell">
-        <Link aria-label="Cineverse" className="staff-brand" href="/">
-          <span className="text-3xl font-black tracking-[-0.08em]">
-            CINE<span className="text-primary">VERSE</span>
-          </span>
+        <Link aria-label="CINEVERSE" className="staff-brand" href="/">
+          <NextImage alt="CINEVERSE" height={53} priority src="/assets/logo.svg" width={236} />
         </Link>
-        <form className="staff-login-card" onSubmit={handleSubmit}>
-          <header className="staff-card-heading">
-            <p className="eyebrow">STAFF ACCESS</p>
-            <h1>Đăng nhập nhân viên</h1>
-            <p>
-              Phiên làm việc chỉ được lưu trong trình duyệt hiện tại để bảo vệ
-              màn hình kiểm soát vé.
+        {needsSetup ? (
+          <form className="staff-login-card" onSubmit={handleCreateAdmin}>
+            <header className="staff-card-heading">
+              <p className="eyebrow">CINEVERSE OPERATIONS</p>
+              <h1>Khởi tạo tài khoản quản trị</h1>
+              <p>
+                Thiết lập tài khoản vận hành đầu tiên cho cổng kiểm soát vé.
+              </p>
+            </header>
+            <div className="staff-form">
+              <label className="form-field">
+                <span>Họ và tên nhân viên</span>
+                <Input
+                  autoComplete="name"
+                  className={staffFieldInputClass}
+                  name="fullName"
+                  required
+                />
+              </label>
+              <label className="form-field">
+                <span>Email nhân viên</span>
+                <Input
+                  autoComplete="username"
+                  className={staffFieldInputClass}
+                  name="email"
+                  required
+                  type="email"
+                />
+              </label>
+              <label className="form-field">
+                <span>Mật khẩu</span>
+                <Input
+                  autoComplete="new-password"
+                  className={staffFieldInputClass}
+                  name="password"
+                  required
+                  type="password"
+                />
+              </label>
+              <label className="form-field">
+                <span>Xác nhận mật khẩu</span>
+                <Input
+                  autoComplete="new-password"
+                  className={staffFieldInputClass}
+                  name="confirmPassword"
+                  required
+                  type="password"
+                />
+              </label>
+            </div>
+            <p
+              aria-live="polite"
+              className={`staff-form-message${message ? " is-error" : ""}`}
+            >
+              {message}
             </p>
-          </header>
-          <div className="staff-form">
-            <Input name="fullName" placeholder="Họ tên nhân viên" required />
-            <Input
-              name="email"
-              placeholder="Email nhân viên"
-              required
-              type="email"
-            />
-            <Input
-              minLength={4}
-              name="password"
-              placeholder="Mật khẩu"
-              required
-              type="password"
-            />
-          </div>
-          <p
-            aria-live="polite"
-            className={`staff-form-message${message ? " is-error" : ""}`}
-          >
-            {message}
-          </p>
-          <div className="staff-form-actions">
-            <Button type="submit">Mở cổng kiểm soát</Button>
-          </div>
-        </form>
-        <p className="staff-login-footer">CINEVERSE · GATE CONTROL SYSTEM</p>
+            <div className="staff-form-actions">
+              <Button
+                className="h-12 w-full text-sm font-extrabold uppercase tracking-[0.08em]"
+                type="submit"
+              >
+                Tạo tài khoản quản trị
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <form className="staff-login-card" onSubmit={handleLogin}>
+            <header className="staff-card-heading">
+              <p className="eyebrow">CINEVERSE OPERATIONS</p>
+              <h1>Đăng nhập nhân viên</h1>
+              <p>Xác thực tài khoản để truy cập cổng kiểm soát vé.</p>
+            </header>
+            <div className="staff-form">
+              <label className="form-field">
+                <span>Email nhân viên</span>
+                <Input
+                  autoComplete="username"
+                  className={staffFieldInputClass}
+                  name="email"
+                  required
+                  type="email"
+                />
+              </label>
+              <label className="form-field">
+                <span>Mật khẩu</span>
+                <Input
+                  autoComplete="current-password"
+                  className={staffFieldInputClass}
+                  name="password"
+                  required
+                  type="password"
+                />
+              </label>
+            </div>
+            <p
+              aria-live="polite"
+              className={`staff-form-message${message ? " is-error" : ""}`}
+            >
+              {message}
+            </p>
+            <div className="staff-form-actions">
+              <Button
+                className="h-12 w-full text-sm font-extrabold uppercase tracking-[0.08em]"
+                type="submit"
+              >
+                Đăng nhập
+              </Button>
+            </div>
+          </form>
+        )}
+        <p className="staff-login-footer">
+          CINEVERSE · GATE CONTROL OPERATIONS
+        </p>
       </section>
     </main>
   );
