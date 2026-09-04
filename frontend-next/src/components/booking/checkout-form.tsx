@@ -21,6 +21,7 @@ import { useFeedback } from "@/components/feedback/feedback-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  hasShowtimeStarted,
   resolveShowtimeById,
   showtimeEndLabel,
   showtimeGroupLabel,
@@ -34,6 +35,7 @@ import {
   POINT_EARN_DIVISOR,
   POINT_VALUE,
 } from "@/lib/member";
+import { useNow } from "@/lib/use-now";
 import { useCurrentProfile } from "@/lib/stores/auth.store";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { resolveRatingCode } from "@/lib/age-rating";
@@ -225,6 +227,11 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const selectedCinema = cinemas.find(
     (cinema) => cinema.id === selectedShowtime?.cinemaId,
   );
+  const now = useNow();
+  /** Không cho thanh toán một suất chiếu đã qua giờ chiếu. */
+  const showtimeStarted = Boolean(
+    selectedShowtime && hasShowtimeStarted(selectedShowtime, now),
+  );
   const showtimeSummary = useMemo(() => {
     if (!selectedShowtime || !selectedMovie || !selectedCinema) {
       return null;
@@ -366,6 +373,8 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
         formatLabel: selectedShowtime
           ? showtimeGroupLabel(selectedShowtime)
           : "",
+        startsAt: selectedShowtime?.startsAt ?? "",
+        durationMinutes: selectedMovie?.durationMinutes ?? 0,
         dateLabel: selectedShowtime
           ? checkoutDate.format(new Date(selectedShowtime.startsAt))
           : "",
@@ -430,6 +439,28 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
         </p>
         <Link href="/auth?next=/booking/checkout">
           Đăng nhập / Đăng ký tài khoản
+        </Link>
+      </section>
+    );
+  }
+
+  if (showtimeStarted) {
+    return (
+      <section aria-live="assertive" className="checkout-empty-state">
+        <TicketIcon aria-hidden="true" className="size-8 text-destructive" />
+        <h2>Suất chiếu đã bắt đầu</h2>
+        <p>
+          Suất chiếu bạn chọn đã qua giờ chiếu nên đơn hàng không còn hiệu lực.
+          Hãy chọn một suất chiếu khác để tiếp tục đặt vé.
+        </p>
+        <Link
+          href={
+            booking.movieId
+              ? `/showtimes?movie=${encodeURIComponent(booking.movieId)}`
+              : "/showtimes"
+          }
+        >
+          Chọn suất chiếu khác
         </Link>
       </section>
     );

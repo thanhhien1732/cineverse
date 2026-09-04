@@ -28,6 +28,8 @@ const emptyDetails: TicketDetails = {
   cinemaName: "CINEVERSE",
   hall: "—",
   formatLabel: "—",
+  startsAt: "",
+  durationMinutes: 0,
   dateLabel: "—",
   timeLabel: "—",
   paymentLabel: "Thẻ ngân hàng",

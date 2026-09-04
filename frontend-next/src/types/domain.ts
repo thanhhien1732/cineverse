@@ -90,6 +90,9 @@ export interface TicketDetails {
   readonly cinemaName: string;
   readonly hall: string;
   readonly formatLabel: string;
+  /** Thời điểm bắt đầu suất chiếu (ISO), dùng để suy ra trạng thái vé. */
+  readonly startsAt: string;
+  readonly durationMinutes: number;
   readonly dateLabel: string;
   readonly timeLabel: string;
   readonly paymentLabel: string;

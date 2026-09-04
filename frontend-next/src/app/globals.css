@@ -4912,9 +4912,9 @@
     gap: 0.5625rem;
   }
 
-  .ticket-action {
+  .ticket-action,
+  .wallet-action {
     display: inline-flex;
-    width: 100%;
     min-height: 3rem;
     align-items: center;
     justify-content: center;
@@ -4934,24 +4934,34 @@
       box-shadow 180ms ease;
   }
 
-  .ticket-action-ghost {
-    border-color: var(--border);
-    background: rgb(255 255 255 / 4%);
+  .ticket-action {
+    width: 100%;
+  }
+
+  .ticket-action-ghost,
+  .wallet-action-ghost {
+    border-color: rgb(255 255 255 / 20%);
+    background: rgb(255 255 255 / 6%);
     color: var(--foreground);
   }
 
-  .ticket-action-ghost:hover {
-    border-color: rgb(112 127 255 / 55%);
-    background: rgb(95 109 255 / 14%);
+  .ticket-action-ghost:hover,
+  .wallet-action-ghost:hover {
+    border-color: rgb(255 255 255 / 42%);
+    background: rgb(255 255 255 / 11%);
   }
 
-  .ticket-action-primary {
+  .ticket-action-primary,
+  .wallet-action-primary,
+  .wallet-ticket-open {
     background: linear-gradient(110deg, var(--primary), #5367ff 62%, #7b56ff);
     box-shadow: 0 0.75rem 2.125rem rgb(81 102 255 / 32%);
     color: white;
   }
 
-  .ticket-action-primary:hover {
+  .ticket-action-primary:hover,
+  .wallet-action-primary:hover,
+  .wallet-ticket-open:hover {
     transform: translateY(-0.125rem);
     box-shadow: 0 1rem 2.625rem rgb(81 102 255 / 50%);
   }
@@ -5207,5 +5217,284 @@
     height: 7mm;
     padding: 0.6mm;
     border: 0.25mm solid #ccc;
+  }
+}
+
+@layer components {
+  /* Trang "Vé của tôi" — port từ `.ticket-wallet-hero` / `.wallet-ticket-*` legacy. */
+  .ticket-wallet-hero {
+    padding: 3.75rem 0 2.625rem;
+    border-bottom: 1px solid var(--border);
+    background:
+      radial-gradient(circle at 78% 24%,
+        rgb(97 225 164 / 15%),
+        transparent 28%),
+      radial-gradient(circle at 14% 70%,
+        rgb(91 112 255 / 18%),
+        transparent 34%),
+      #080d17;
+  }
+
+  .ticket-wallet-hero h1 {
+    margin: 0.5rem 0;
+    color: white;
+    font-size: clamp(2.4rem, 6vw, 5.4rem);
+    font-weight: 900;
+    letter-spacing: -0.055em;
+    line-height: 1;
+  }
+
+  .ticket-wallet-hero p:last-child {
+    color: var(--muted);
+  }
+
+  .wallet-heading,
+  .wallet-ticket-head,
+  .wallet-ticket-footer,
+  .wallet-empty-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.875rem;
+  }
+
+  .wallet-ticket-grid {
+    display: grid;
+    gap: 1.125rem;
+  }
+
+  .wallet-ticket-card {
+    display: grid;
+    grid-template-columns: 9.375rem minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1.125rem;
+    background: rgb(12 18 31 / 88%);
+    box-shadow: var(--shadow-cinema);
+  }
+
+  .wallet-ticket-poster img {
+    width: 100%;
+    height: 100%;
+    min-height: 14.375rem;
+    object-fit: cover;
+  }
+
+  .wallet-ticket-content {
+    display: grid;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .wallet-ticket-head h2 {
+    margin: 0.3125rem 0 0;
+    color: white;
+    font-size: clamp(1.35rem, 3vw, 2.15rem);
+    font-weight: 900;
+    letter-spacing: -0.045em;
+    line-height: 1.08;
+  }
+
+  .wallet-ticket-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    padding: 0.4375rem 0.6875rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Chấm tròn cùng màu chữ, giúp phân biệt trạng thái khi nhìn lướt. */
+  .wallet-ticket-status::before {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: currentcolor;
+    content: "";
+  }
+
+  .wallet-ticket-status.is-upcoming {
+    border-color: rgb(97 225 164 / 32%);
+    background: rgb(97 225 164 / 8%);
+    color: var(--success);
+  }
+
+  .wallet-ticket-status.is-playing {
+    border-color: rgb(255 191 105 / 38%);
+    background: rgb(255 191 105 / 10%);
+    color: var(--warning);
+  }
+
+  .wallet-ticket-status.is-finished {
+    border-color: rgb(255 255 255 / 14%);
+    background: rgb(255 255 255 / 5%);
+    color: var(--muted);
+  }
+
+  /* Vé đã chiếu lùi về sau: giảm tương phản poster và tiêu đề. */
+  .wallet-ticket-card:has(.is-finished) .wallet-ticket-poster img {
+    filter: grayscale(0.7);
+    opacity: 0.55;
+  }
+
+  .wallet-ticket-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem 1.125rem;
+    margin: 0;
+  }
+
+  .wallet-ticket-meta div,
+  .wallet-ticket-footer span {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .wallet-ticket-meta dt,
+  .wallet-ticket-footer small {
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  .wallet-ticket-meta dd {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .wallet-ticket-footer {
+    padding-top: 0.9375rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .wallet-ticket-footer strong {
+    color: var(--primary-bright);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .wallet-ticket-open {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0 1.125rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.77rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition:
+      transform 180ms ease,
+      background 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .wallet-empty-state {
+    display: grid;
+    max-width: 38.75rem;
+    margin: 0 auto;
+    justify-items: center;
+    padding: 3.625rem 1.125rem;
+    border: 1px dashed rgb(255 255 255 / 16%);
+    border-radius: var(--radius);
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .wallet-empty-state>span {
+    display: grid;
+    width: 2.625rem;
+    height: 2.625rem;
+    place-items: center;
+    border: 1px solid rgb(112 127 255 / 44%);
+    border-radius: 50%;
+    background: rgb(95 109 255 / 12%);
+    color: var(--primary-bright);
+  }
+
+  .wallet-empty-state h2 {
+    margin: 0.9375rem 0 0;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+
+  .wallet-empty-state p {
+    margin: 0.5rem 0 1.25rem;
+  }
+
+  .wallet-empty-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  @media (width <=45rem) {
+    .ticket-wallet-hero {
+      padding: 2.75rem 0 1.875rem;
+    }
+
+    .wallet-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .wallet-ticket-card {
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      border-radius: 0.875rem;
+    }
+
+    .wallet-ticket-poster img {
+      min-height: 100%;
+    }
+
+    .wallet-ticket-content {
+      gap: 0.8125rem;
+      padding: 0.875rem;
+    }
+
+    .wallet-ticket-head {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .wallet-ticket-status {
+      padding: 0.3125rem 0.5rem;
+      font-size: 0.66rem;
+    }
+
+    .wallet-ticket-meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.625rem 0.75rem;
+    }
+
+    .wallet-ticket-footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .wallet-ticket-open {
+      width: 100%;
+    }
+  }
+
+  @media (width <=26.875rem) {
+    .wallet-ticket-card {
+      grid-template-columns: 1fr;
+    }
+
+    .wallet-ticket-poster {
+      display: none;
+    }
   }
 }

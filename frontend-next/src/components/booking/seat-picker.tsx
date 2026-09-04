@@ -11,6 +11,7 @@ import {
   type BookingShowtimeSummary,
 } from "@/components/booking/showtime-summary-card";
 import { SeatHoldTimer } from "@/components/booking/seat-hold-timer";
+import { useNow } from "@/lib/use-now";
 import { usePanZoom } from "@/lib/use-pan-zoom";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { cn } from "@/lib/utils";
@@ -183,8 +184,10 @@ export type SeatShowtimeSummary = BookingShowtimeSummary;
 
 export function SeatPicker({
   showtimeSummary,
+  showtimeStartsAt,
 }: {
   showtimeSummary: SeatShowtimeSummary | null;
+  showtimeStartsAt: string | null;
 }) {
   const router = useRouter();
   const selectedSeatIds = useBookingStore((state) => state.seatIds);
@@ -210,6 +213,14 @@ export function SeatPicker({
     ? `/showtimes?movie=${encodeURIComponent(movieId)}`
     : "/showtimes";
 
+  const now = useNow();
+  /** Đơn đang dở nhưng suất chiếu đã tới giờ thì hủy luôn phiên chọn ghế. */
+  const showtimeStarted = Boolean(
+    showtimeStartsAt &&
+      now !== null &&
+      new Date(showtimeStartsAt).getTime() <= now,
+  );
+
   const handleExpire = useCallback(() => {
     clearSeats();
     setSelectionMessage(null);
@@ -229,6 +240,30 @@ export function SeatPicker({
     toggleSeat(seatId);
     setSelectionMessage(null);
   };
+
+  if (showtimeStarted) {
+    return (
+      <div>
+        <BookingSteps active={2} />
+        <section
+          aria-live="assertive"
+          className="mx-auto max-w-2xl rounded-xl border border-destructive/40 bg-destructive/10 p-8 text-center"
+        >
+          <p className="text-xs font-black tracking-[0.16em] text-destructive">
+            SUẤT CHIẾU ĐÃ BẮT ĐẦU
+          </p>
+          <h2 className="mt-3 text-2xl font-black">Đơn đặt vé đã được hủy</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Suất chiếu bạn chọn đã qua giờ chiếu nên không thể tiếp tục đặt vé.
+            Vui lòng chọn một suất chiếu khác.
+          </p>
+          <Button className="mt-6" onClick={() => router.push(showtimesHref)}>
+            Chọn lại suất chiếu
+          </Button>
+        </section>
+      </div>
+    );
+  }
 
   if (expired) {
     return (

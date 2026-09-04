@@ -37,7 +37,7 @@ async function buildShowtimeSummary(showtimeId: string) {
     return null;
   }
 
-  return {
+  const summary = {
     movieTitle: movie.title,
     ratingCode: resolveRatingCode(movie.ratingLabel),
     posterPath: movie.posterPath,
@@ -47,6 +47,8 @@ async function buildShowtimeSummary(showtimeId: string) {
     timeLabel: `${showtimeStartLabel(showtime)} ~ ${showtimeEndLabel(showtime, movie.durationMinutes)}`,
     formatLabel: showtimeGroupLabel(showtime),
   };
+
+  return { summary, startsAt: showtime.startsAt };
 }
 
 export default async function Page({
@@ -55,7 +57,7 @@ export default async function Page({
   params: Promise<{ showtimeId: string }>;
 }) {
   const { showtimeId } = await params;
-  const summary = await buildShowtimeSummary(decodeURIComponent(showtimeId));
+  const resolved = await buildShowtimeSummary(decodeURIComponent(showtimeId));
 
   return (
     <section className="mx-auto max-w-340 px-page py-section">
@@ -67,7 +69,10 @@ export default async function Page({
         Chọn vị trí ngồi phù hợp cho suất chiếu bạn vừa chọn.
       </p>
       <div className="mt-10">
-        <SeatPicker showtimeSummary={summary} />
+        <SeatPicker
+          showtimeSummary={resolved?.summary ?? null}
+          showtimeStartsAt={resolved?.startsAt ?? null}
+        />
       </div>
     </section>
   );

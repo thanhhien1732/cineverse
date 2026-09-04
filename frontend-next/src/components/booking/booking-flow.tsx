@@ -34,10 +34,12 @@ import { distanceInKm, formatDistance } from "@/lib/geo";
 import {
   buildShowtimesFor,
   resolveShowtimeById,
+  hasShowtimeStarted,
   showtimeEndLabel,
   showtimeGroupLabel,
   showtimeStartLabel,
 } from "@/lib/showtime-schedule";
+import { useNow } from "@/lib/use-now";
 import { useViewerLocation } from "@/lib/use-viewer-location";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import type {
@@ -355,6 +357,7 @@ function CinemaShowtimes({
   distanceKm,
   movie,
   date,
+  now,
   pendingShowtime,
   onSelect,
 }: {
@@ -363,18 +366,25 @@ function CinemaShowtimes({
   distanceKm: number;
   movie: Movie | undefined;
   date: string;
+  now: number | null;
   pendingShowtime: Showtime | null;
   onSelect: (showtime: Showtime) => void;
 }) {
   const [isOpen, setIsOpen] = useState(true);
-  const groups = useMemo(() => {
-    if (!movie) {
-      return [];
-    }
+  const schedule = useMemo(
+    () => (movie ? buildShowtimesFor(movie.id, cinema, date) : []),
+    [cinema, date, movie],
+  );
 
+  /** Suất đã tới giờ chiếu bị loại khỏi danh sách ngay khi đồng hồ nhảy. */
+  const groups = useMemo(() => {
     const byLabel = new Map<string, Showtime[]>();
 
-    for (const showtime of buildShowtimesFor(movie.id, cinema, date)) {
+    for (const showtime of schedule) {
+      if (hasShowtimeStarted(showtime, now)) {
+        continue;
+      }
+
       const label = showtimeGroupLabel(showtime);
       const bucket = byLabel.get(label);
 
@@ -386,7 +396,7 @@ function CinemaShowtimes({
     }
 
     return [...byLabel.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [cinema, date, movie]);
+  }, [now, schedule]);
 
   return (
     <article
@@ -452,7 +462,11 @@ function CinemaShowtimes({
           </div>
         ))}
         {!groups.length && (
-          <p className="text-sm text-muted-foreground">Chưa có suất phù hợp.</p>
+          <p className="text-sm text-muted-foreground">
+            {schedule.length
+              ? "Đã hết suất chiếu trong ngày."
+              : "Chưa có suất phù hợp."}
+          </p>
         )}
       </div>
     </article>
@@ -483,8 +497,15 @@ export function ShowtimePicker({
   const selectMovie = useBookingStore((state) => state.selectMovie);
   const selectShowtime = useBookingStore((state) => state.selectShowtime);
   const { coordinates } = useViewerLocation();
-  const selectedCinema = pendingShowtime
-    ? cinemas.find((cinema) => cinema.id === pendingShowtime.cinemaId)
+  const now = useNow();
+  /** Suất đang chọn mà trôi qua giờ chiếu thì coi như chưa chọn gì. */
+  const activeShowtime =
+    pendingShowtime && !hasShowtimeStarted(pendingShowtime, now)
+      ? pendingShowtime
+      : null;
+
+  const selectedCinema = activeShowtime
+    ? cinemas.find((cinema) => cinema.id === activeShowtime.cinemaId)
     : null;
 
   /** Rạp trong thành phố đang chọn, rạp gần khách nhất xếp lên đầu. */
@@ -609,7 +630,8 @@ export function ShowtimePicker({
                 distanceKm={entry.distanceKm}
                 movie={movie}
                 date={date}
-                pendingShowtime={pendingShowtime}
+                now={now}
+                pendingShowtime={activeShowtime}
                 onSelect={setPendingShowtime}
               />
             ))}
@@ -621,11 +643,11 @@ export function ShowtimePicker({
           dayLabel={fullDate.format(parseBookingDate(date))}
           cinemaLabel={selectedCinema?.name ?? "Chưa chọn"}
           showtimeLabel={
-            pendingShowtime
-              ? `${showtimeStartLabel(pendingShowtime)} · ${showtimeGroupLabel(pendingShowtime)}`
+            activeShowtime
+              ? `${showtimeStartLabel(activeShowtime)} · ${showtimeGroupLabel(activeShowtime)}`
               : "Chưa chọn"
           }
-          canContinue={pendingShowtime !== null}
+          canContinue={activeShowtime !== null}
           onContinue={() => setAgeModalOpen(true)}
         />
       </div>
@@ -634,13 +656,13 @@ export function ShowtimePicker({
         rating={movie.ratingLabel}
         onCancel={() => setAgeModalOpen(false)}
         onConfirm={() => {
-          if (!pendingShowtime) {
+          if (!activeShowtime) {
             return;
           }
 
-          selectMovie(pendingShowtime.movieId);
-          selectShowtime(pendingShowtime.id);
-          router.push(`/booking/${pendingShowtime.id}/seats`);
+          selectMovie(activeShowtime.movieId);
+          selectShowtime(activeShowtime.id);
+          router.push(`/booking/${activeShowtime.id}/seats`);
         }}
       />
     </div>
@@ -839,11 +861,19 @@ export function ComboPicker({
   const quantities = useBookingStore((state) => state.comboQuantities);
   const setQuantity = useBookingStore((state) => state.setComboQuantity);
   const showtimeId = useBookingStore((state) => state.showtimeId);
+  const movieId = useBookingStore((state) => state.movieId);
+  const now = useNow();
 
   /** Quay lại đúng suất chiếu đang đặt để người dùng đổi ghế mà không mất lựa chọn. */
   const seatsHref = showtimeId
     ? `/booking/${encodeURIComponent(showtimeId)}/seats`
     : "/showtimes";
+
+  const selectedShowtime = resolveShowtimeById(showtimeId, cinemas);
+  /** Suất chiếu đã tới giờ thì dừng luôn bước chọn combo. */
+  const showtimeStarted = Boolean(
+    selectedShowtime && hasShowtimeStarted(selectedShowtime, now),
+  );
 
   const showtimeSummary = useMemo(() => {
     const showtime = resolveShowtimeById(showtimeId, cinemas);
@@ -870,6 +900,39 @@ export function ComboPicker({
       formatLabel: showtimeGroupLabel(showtime),
     };
   }, [cinemas, movies, showtimeId]);
+
+  if (showtimeStarted) {
+    return (
+      <div>
+        <BookingSteps active={3} />
+        <section
+          aria-live="assertive"
+          className="mx-auto max-w-2xl rounded-xl border border-destructive/40 bg-destructive/10 p-8 text-center"
+        >
+          <p className="text-xs font-black tracking-[0.16em] text-destructive">
+            SUẤT CHIẾU ĐÃ BẮT ĐẦU
+          </p>
+          <h2 className="mt-3 text-2xl font-black">Đơn đặt vé đã được hủy</h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Suất chiếu bạn chọn đã qua giờ chiếu nên không thể tiếp tục đặt vé.
+            Vui lòng chọn một suất chiếu khác.
+          </p>
+          <Button
+            className="mt-6"
+            onClick={() =>
+              router.push(
+                movieId
+                  ? `/showtimes?movie=${encodeURIComponent(movieId)}`
+                  : "/showtimes",
+              )
+            }
+          >
+            Chọn lại suất chiếu
+          </Button>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div>

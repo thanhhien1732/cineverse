@@ -114,6 +114,17 @@ export function resolveShowtimeById(
   );
 }
 
+/**
+ * Suất chiếu đã qua giờ bắt đầu thì ngừng bán vé. `now` là `null` khi phía
+ * client chưa đọc được đồng hồ (lần render đầu) — khi đó chưa loại suất nào.
+ */
+export function hasShowtimeStarted(
+  showtime: Showtime,
+  now: number | null,
+): boolean {
+  return now !== null && new Date(showtime.startsAt).getTime() <= now;
+}
+
 /** Nhãn nhóm suất chiếu, ví dụ `2D Phụ đề`. */
 export function showtimeGroupLabel(showtime: Showtime): string {
   return `${showtime.format} ${
