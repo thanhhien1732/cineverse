@@ -15,7 +15,6 @@ import {
   MapPinIcon,
   MinusIcon,
   PlusIcon,
-  PrinterIcon,
   TicketIcon,
 } from "lucide-react";
 import {
@@ -1128,71 +1127,5 @@ export function Checkout({
         <BookingSummary movies={movies} cinemas={cinemas} combos={combos} />
       </div>
     </div>
-  );
-}
-
-export function TicketCard({ ticket }: { ticket: Ticket }) {
-  return (
-    <article
-      className={cn(
-        "rounded-xl border border-border bg-surface p-6",
-        "print:border-black print:bg-white print:text-black",
-      )}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs tracking-widest text-primary-bright">
-            CINEVERSE E-TICKET
-          </p>
-          <h1 className="mt-2 text-2xl font-black">{ticket.movieTitle}</h1>
-          <p className="mt-2 text-muted-foreground">
-            Mã vé: <strong className="text-foreground">{ticket.code}</strong>
-          </p>
-        </div>
-        <div
-          aria-label={`QR code ${ticket.code}`}
-          className="grid size-32 grid-cols-8 gap-px bg-white p-2"
-        >
-          {Array.from({ length: 64 }, (_, index) => (
-            <i
-              key={index}
-              className={
-                (index * 7 + ticket.code.length * 3) % 5 < 2
-                  ? "bg-black"
-                  : "bg-white"
-              }
-            />
-          ))}
-        </div>
-      </div>
-      <dl className="mt-6 grid gap-3 border-t border-border pt-5 sm:grid-cols-3">
-        <div>
-          <dt className="text-xs text-muted-foreground">Ghế</dt>
-          <dd>{ticket.seatLabels.join(", ")}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">Thanh toán</dt>
-          <dd>{money.format(ticket.total)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">Trạng thái</dt>
-          <dd>
-            <Badge
-              variant={ticket.status === "valid" ? "default" : "secondary"}
-            >
-              {ticket.status === "valid" ? "Hợp lệ" : "Đã sử dụng"}
-            </Badge>
-          </dd>
-        </div>
-      </dl>
-      <Button
-        className="mt-6 print:hidden"
-        variant="outline"
-        onClick={() => window.print()}
-      >
-        <PrinterIcon data-icon="inline-start" />
-        In vé
-      </Button>
-    </article>
   );
 }

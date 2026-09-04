@@ -74,6 +74,37 @@ export interface Combo {
 
 export type TicketStatus = "valid" | "used" | "invalid";
 
+export interface TicketComboLine {
+  readonly name: string;
+  readonly quantity: number;
+}
+
+/**
+ * Bản chụp thông tin đơn hàng tại thời điểm phát hành vé. Trang mã vé chạy
+ * hoàn toàn phía client nên không dựng lại được lịch chiếu, rạp hay combo —
+ * mọi thứ cần in trên vé đều được lưu kèm, giống `ticket.booking` của legacy.
+ */
+export interface TicketDetails {
+  readonly posterPath: string;
+  readonly ratingCode: string;
+  readonly cinemaName: string;
+  readonly hall: string;
+  readonly formatLabel: string;
+  readonly dateLabel: string;
+  readonly timeLabel: string;
+  readonly paymentLabel: string;
+  readonly admissionCount: number;
+  /** Tuổi suy ra từ ngày sinh tài khoản, `null` khi chưa cập nhật. */
+  readonly verifiedAge: number | null;
+  readonly seatSubtotal: number;
+  readonly comboSubtotal: number;
+  readonly voucherDiscount: number;
+  readonly pointsDiscount: number;
+  readonly comboLines: readonly TicketComboLine[];
+  readonly earnedPoints: number;
+  readonly tierLabel: string;
+}
+
 export interface Ticket {
   readonly id: string;
   readonly code: string;
@@ -88,6 +119,7 @@ export interface Ticket {
   readonly customerEmail: string;
   readonly createdAt: string;
   readonly status: TicketStatus;
+  readonly details?: TicketDetails;
 }
 
 export interface StaffProfile {

@@ -68,7 +68,7 @@ export const useBookingStore = create<BookingStore>()(
       clearBooking: () => set(initialBookingDraft),
     }),
     {
-      name: "cineverse.booking-draft.v2",
+      name: "cineverse.booking-draft.v3",
       storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         ...initialBookingDraft,

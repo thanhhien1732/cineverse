@@ -27,17 +27,72 @@ import {
   showtimeStartLabel,
 } from "@/lib/showtime-schedule";
 import {
+  calculateAge,
   calculateRewardTotals,
   deriveMemberWallet,
+  getTierForLifetimePoints,
+  POINT_EARN_DIVISOR,
   POINT_VALUE,
 } from "@/lib/member";
 import { useCurrentProfile } from "@/lib/stores/auth.store";
 import { useBookingStore } from "@/lib/stores/booking.store";
 import { resolveRatingCode } from "@/lib/age-rating";
 import { cn } from "@/lib/utils";
-import type { Cinema, Combo, Movie, Ticket } from "@/types/domain";
+import type {
+  Cinema,
+  Combo,
+  Movie,
+  Ticket,
+  TicketComboLine,
+} from "@/types/domain";
 
-type PaymentMethod = "card" | "momo";
+type PaymentMethod = "card" | "vnpay" | "momo";
+
+/** Cổng thanh toán mở modal quét QR trước khi phát hành vé. */
+type PaymentGateway = Exclude<PaymentMethod, "card">;
+
+interface GatewayProfile {
+  readonly name: string;
+  readonly logoPath: string;
+  readonly logoWidth: number;
+  readonly logoHeight: number;
+  readonly qrPath: string;
+  readonly qrAlt: string;
+  readonly referencePrefix: string;
+  readonly badgeClassName: string;
+  readonly confirmClassName: string;
+}
+
+const gatewayProfiles: Readonly<Record<PaymentGateway, GatewayProfile>> = {
+  vnpay: {
+    name: "VNPAY",
+    logoPath: "/assets/vnpay/vnpay-logo.webp",
+    logoWidth: 52,
+    logoHeight: 41,
+    qrPath: "/assets/vnpay/vnpay-qr.png",
+    qrAlt: "Mã QR thanh toán VNPAY",
+    referencePrefix: "CV-VNPAY",
+    badgeClassName: "gateway-brand-badge vnpay-brand-badge",
+    confirmClassName: "vnpay-confirm-button",
+  },
+  momo: {
+    name: "MoMo",
+    logoPath: "/assets/momo/momo-logo.svg",
+    logoWidth: 52,
+    logoHeight: 52,
+    qrPath: "/assets/momo/momo-qr.png",
+    qrAlt: "Mã QR thanh toán MoMo",
+    referencePrefix: "CV-MOMO",
+    badgeClassName: "gateway-brand-badge momo-brand-badge",
+    confirmClassName: "momo-confirm-button",
+  },
+};
+
+const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
+  card: "Thẻ ngân hàng",
+  vnpay: "VNPAY",
+  momo: "MoMo",
+};
 
 interface CheckoutValues {
   readonly cardNumber: string;
@@ -75,6 +130,18 @@ const checkoutDate = new Intl.DateTimeFormat("vi-VN", {
   year: "numeric",
   timeZone: "Asia/Ho_Chi_Minh",
 });
+
+/** Mã vé 8 ký tự, bỏ các ký tự dễ nhầm (I, O, 0, 1) như frontend legacy. */
+function generateTicketCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "CV-";
+
+  for (let index = 0; index < 8; index += 1) {
+    code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+  }
+
+  return code;
+}
 
 function getSeatPrice(seatId: string) {
   if (seatId.startsWith("J")) {
@@ -147,9 +214,10 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
   const [voucherApplied, setVoucherApplied] = useState(false);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
-  const [isMomoModalOpen, setIsMomoModalOpen] = useState(false);
-  const [isConfirmingMomo, setIsConfirmingMomo] = useState(false);
-  const [momoReference, setMomoReference] = useState("");
+  const [openGateway, setOpenGateway] = useState<PaymentGateway | null>(null);
+  const [isConfirmingGateway, setIsConfirmingGateway] = useState(false);
+  const [gatewayReference, setGatewayReference] = useState("");
+  const openGatewayProfile = openGateway ? gatewayProfiles[openGateway] : null;
 
   const selectedMovie = movies.find((movie) => movie.id === booking.movieId);
   const selectedShowtime =
@@ -267,9 +335,17 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       return;
     }
 
+    const comboLines: readonly TicketComboLine[] = combos
+      .map((combo) => ({
+        name: combo.name,
+        quantity: booking.comboQuantities[combo.id] ?? 0,
+      }))
+      .filter((line) => line.quantity > 0);
+    const earnedPoints = Math.floor(orderTotal / POINT_EARN_DIVISOR);
+
     const ticket: Ticket = {
       id: crypto.randomUUID(),
-      code: `CV-${Date.now().toString().slice(-8)}`,
+      code: generateTicketCode(),
       movieTitle: selectedMovie?.title ?? "CINEVERSE",
       showtimeId: booking.showtimeId,
       seatLabels: booking.seatIds,
@@ -280,6 +356,33 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       customerEmail: profile?.email ?? "",
       createdAt: new Date().toISOString(),
       status: "valid",
+      details: {
+        posterPath: selectedMovie?.posterPath ?? "",
+        ratingCode: selectedMovie
+          ? resolveRatingCode(selectedMovie.ratingLabel)
+          : "P",
+        cinemaName: selectedCinema?.name ?? "CINEVERSE",
+        hall: selectedShowtime?.hall ?? "",
+        formatLabel: selectedShowtime
+          ? showtimeGroupLabel(selectedShowtime)
+          : "",
+        dateLabel: selectedShowtime
+          ? checkoutDate.format(new Date(selectedShowtime.startsAt))
+          : "",
+        timeLabel: selectedShowtime ? showtimeStartLabel(selectedShowtime) : "",
+        paymentLabel: paymentLabels[paymentMethod],
+        admissionCount: getAdmissionCount(booking.seatIds),
+        verifiedAge: calculateAge(profile?.dateOfBirth ?? ""),
+        seatSubtotal,
+        comboSubtotal,
+        voucherDiscount,
+        pointsDiscount: rewardTotals.pointsDiscount,
+        comboLines,
+        earnedPoints,
+        tierLabel: getTierForLifetimePoints(
+          wallet.lifetimePoints + earnedPoints,
+        ).label,
+      },
     };
 
     booking.issueTicket(ticket);
@@ -303,9 +406,13 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
       return;
     }
 
-    if (paymentMethod === "momo") {
-      setMomoReference(`CV-MOMO-${Date.now().toString(36).toUpperCase()}`);
-      setIsMomoModalOpen(true);
+    if (paymentMethod !== "card") {
+      const gateway = gatewayProfiles[paymentMethod];
+
+      setGatewayReference(
+        `${gateway.referencePrefix}-${Date.now().toString(36).toUpperCase()}`,
+      );
+      setOpenGateway(paymentMethod);
       return;
     }
 
@@ -538,6 +645,28 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
               </div>
               <label className="payment-option">
                 <input
+                  checked={paymentMethod === "vnpay"}
+                  name="paymentMethod"
+                  onChange={() => setPaymentMethod("vnpay")}
+                  type="radio"
+                />
+                <span>
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    className="payment-option-logo"
+                    height={19}
+                    src="/assets/vnpay/vnpay-logo.webp"
+                    width={24}
+                  />
+                  <span>
+                    <strong>VNPAY</strong>
+                    <small>Quét QR bằng ứng dụng ngân hàng hoặc ví VNPAY</small>
+                  </span>
+                </span>
+              </label>
+              <label className="payment-option">
+                <input
                   checked={paymentMethod === "momo"}
                   name="paymentMethod"
                   onChange={() => setPaymentMethod("momo")}
@@ -629,71 +758,79 @@ export function CheckoutForm({ movies, cinemas, combos }: CheckoutFormProps) {
           voucherDiscount={voucherDiscount}
         />
       </div>
-      <AppModal
-        description="Mở ứng dụng MoMo và xác nhận yêu cầu thanh toán cho đơn hàng CINEVERSE."
-        descriptionPlacement="body"
-        eyebrow="Cổng thanh toán trực tuyến"
-        lead={
-          <span aria-hidden="true" className="momo-brand-badge">
-            <Image
-              alt=""
-              height={52}
-              src="/assets/momo/momo-logo.svg"
-              width={52}
-            />
-          </span>
-        }
-        footer={
-          <>
-            <Button
-              className="momo-modal-button rounded-full text-[0.77rem] font-extrabold"
-              disabled={isConfirmingMomo}
-              onClick={() => setIsMomoModalOpen(false)}
-              variant="outline"
+      {openGatewayProfile && (
+        <AppModal
+          description={`Mở ứng dụng ${openGatewayProfile.name} và xác nhận yêu cầu thanh toán cho đơn hàng CINEVERSE.`}
+          descriptionPlacement="body"
+          eyebrow="Cổng thanh toán trực tuyến"
+          lead={
+            <span
+              aria-hidden="true"
+              className={openGatewayProfile.badgeClassName}
             >
-              Hủy giao dịch
-            </Button>
-            <Button
-              className="momo-modal-button momo-confirm-button rounded-full text-[0.77rem] font-extrabold"
-              disabled={isConfirmingMomo}
-              onClick={() => {
-                setIsConfirmingMomo(true);
-                window.setTimeout(() => issueTicket(), 650);
-              }}
-            >
-              {isConfirmingMomo ? "Đang xác nhận" : "Xác nhận thanh toán"}
-            </Button>
-          </>
-        }
-        onOpenChange={(open) => {
-          if (!isConfirmingMomo) {
-            setIsMomoModalOpen(open);
+              <Image
+                alt=""
+                height={openGatewayProfile.logoHeight}
+                src={openGatewayProfile.logoPath}
+                width={openGatewayProfile.logoWidth}
+              />
+            </span>
           }
-        }}
-        open={isMomoModalOpen}
-        title="Xác nhận thanh toán MoMo"
-        bodyClassName="momo-modal-body"
-        bodyLead={
-          <Image
-            alt="Mã QR dẫn đến trang MoMo Developers"
-            className="momo-qr-image"
-            height={150}
-            src="/assets/momo/momo-qr.png"
-            width={150}
-          />
-        }
-      >
-        <dl className="momo-modal-summary">
-          <div>
-            <dt>Số tiền</dt>
-            <dd>{money.format(orderTotal)}</dd>
-          </div>
-          <div>
-            <dt>Mã giao dịch</dt>
-            <dd>{momoReference}</dd>
-          </div>
-        </dl>
-      </AppModal>
+          footer={
+            <>
+              <Button
+                className="gateway-modal-button rounded-full text-[0.77rem] font-extrabold"
+                disabled={isConfirmingGateway}
+                onClick={() => setOpenGateway(null)}
+                variant="outline"
+              >
+                Hủy giao dịch
+              </Button>
+              <Button
+                className={cn(
+                  "gateway-modal-button rounded-full text-[0.77rem] font-extrabold",
+                  openGatewayProfile.confirmClassName,
+                )}
+                disabled={isConfirmingGateway}
+                onClick={() => {
+                  setIsConfirmingGateway(true);
+                  window.setTimeout(() => issueTicket(), 650);
+                }}
+              >
+                {isConfirmingGateway ? "Đang xác nhận" : "Xác nhận thanh toán"}
+              </Button>
+            </>
+          }
+          onOpenChange={(open) => {
+            if (!isConfirmingGateway && !open) {
+              setOpenGateway(null);
+            }
+          }}
+          open={openGateway !== null}
+          title={`Xác nhận thanh toán ${openGatewayProfile.name}`}
+          bodyClassName="gateway-modal-body"
+          bodyLead={
+            <Image
+              alt={openGatewayProfile.qrAlt}
+              className="gateway-qr-image"
+              height={150}
+              src={openGatewayProfile.qrPath}
+              width={150}
+            />
+          }
+        >
+          <dl className="gateway-modal-summary">
+            <div>
+              <dt>Số tiền</dt>
+              <dd>{money.format(orderTotal)}</dd>
+            </div>
+            <div>
+              <dt>Mã giao dịch</dt>
+              <dd>{gatewayReference}</dd>
+            </div>
+          </dl>
+        </AppModal>
+      )}
     </div>
   );
 }

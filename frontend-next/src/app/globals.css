@@ -2091,8 +2091,11 @@
   }
 
   .payment-option-logo {
+    width: 1.5rem;
+    height: 1.5rem;
     flex: 0 0 auto;
     border-radius: 0.375rem;
+    object-fit: contain;
   }
 
   .payment-option span span {
@@ -2194,7 +2197,7 @@
     font-weight: 700;
   }
 
-  .momo-modal-body {
+  .gateway-modal-body {
     display: grid;
     grid-template-columns: 9.375rem minmax(0, 1fr);
     align-items: center;
@@ -2206,13 +2209,13 @@
     gap: 0.8125rem;
   }
 
-  .momo-modal-body .app-modal-description {
+  .gateway-modal-body .app-modal-description {
     color: var(--muted);
     font-size: 0.78rem;
     line-height: 1.65;
   }
 
-  .momo-brand-badge {
+  .gateway-brand-badge {
     display: grid;
     width: 3.25rem;
     height: 3.25rem;
@@ -2220,18 +2223,38 @@
     place-items: center;
     overflow: hidden;
     border-radius: 1.0625rem;
+  }
+
+  .momo-brand-badge {
     background: #a50064;
     box-shadow: 0 0.75rem 1.75rem rgb(216 45 139 / 26%);
   }
 
-  .momo-brand-badge img {
+  .vnpay-brand-badge {
+    background: white;
+    box-shadow: 0 0.75rem 1.75rem rgb(0 102 179 / 26%);
+  }
+
+  .vnpay-confirm-button {
+    border-color: rgb(255 255 255 / 15%);
+    background: linear-gradient(145deg, #0d6ebd, #04437a);
+    box-shadow: 0 0.6875rem 1.625rem rgb(13 110 189 / 24%);
+  }
+
+  .vnpay-confirm-button:hover {
+    background: linear-gradient(145deg, #1a80d4, #0a5490);
+    box-shadow: 0 0.9375rem 2rem rgb(13 110 189 / 32%);
+    transform: translateY(-2px);
+  }
+
+  .gateway-brand-badge img {
     width: 100%;
     height: 100%;
     padding: 0.25rem;
     object-fit: contain;
   }
 
-  .momo-qr-image {
+  .gateway-qr-image {
     width: 9.375rem;
     height: 9.375rem;
     padding: 0.4375rem;
@@ -2241,13 +2264,13 @@
     object-fit: contain;
   }
 
-  .momo-modal-summary {
+  .gateway-modal-summary {
     display: grid;
     gap: 0.5rem;
     margin: 0;
   }
 
-  .momo-modal-summary>div {
+  .gateway-modal-summary>div {
     display: flex;
     justify-content: space-between;
     gap: 0.75rem;
@@ -2255,12 +2278,12 @@
     border-top: 1px solid var(--border);
   }
 
-  .momo-modal-summary dt {
+  .gateway-modal-summary dt {
     color: var(--muted);
     font-size: 0.72rem;
   }
 
-  .momo-modal-summary dd {
+  .gateway-modal-summary dd {
     margin: 0;
     color: white;
     font-size: 0.78rem;
@@ -2268,7 +2291,7 @@
     text-align: right;
   }
 
-  .momo-modal-button {
+  .gateway-modal-button {
     min-height: 3rem;
     padding: 0 1.125rem;
     letter-spacing: 0.08em;
@@ -2347,7 +2370,7 @@
 
     .auth-form-grid,
     .checkout-form-grid,
-    .momo-modal-body,
+    .gateway-modal-body,
     .rewards-wallet-card {
       grid-template-columns: 1fr;
     }
@@ -2357,7 +2380,7 @@
       flex-direction: column;
     }
 
-    .momo-qr-image {
+    .gateway-qr-image {
       justify-self: center;
     }
 
@@ -4559,5 +4582,630 @@
     .filter-boxes {
       grid-template-columns: 1fr;
     }
+  }
+}
+
+@layer components {
+  /* Vé điện tử bước 5 — port 1:1 khối `.cinema-ticket` của frontend legacy. */
+  .ticket-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18.75rem;
+    gap: 1.375rem;
+  }
+
+  .ticket-card {
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 17%);
+    border-radius: 1.0625rem;
+    background: rgb(12 18 31 / 86%);
+    box-shadow: var(--shadow-cinema);
+  }
+
+  .ticket-brandbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8125rem 1.0625rem;
+    border-bottom: 1px solid rgb(255 255 255 / 13%);
+    background: linear-gradient(90deg,
+        rgb(89 103 255 / 28%),
+        rgb(10 15 26 / 30%));
+  }
+
+  .ticket-brandbar>strong {
+    color: var(--success);
+    font-size: 0.77rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+  }
+
+  .ticket-brandmark {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ticket-brandmark img {
+    width: 9.25rem;
+    height: auto;
+  }
+
+  .ticket-brandmark span {
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+  }
+
+  .ticket-card-body {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .ticket-poster {
+    flex: 0 0 10.75rem;
+    padding: 1rem 0 1rem 1rem;
+  }
+
+  .ticket-poster img {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.75rem;
+    object-fit: cover;
+  }
+
+  .ticket-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 1.125rem;
+  }
+
+  .ticket-info h2 {
+    margin: 0;
+    color: white;
+    font-size: clamp(1.8rem, 4vw, 3.4rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+  }
+
+  .ticket-primary-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 0.9375rem;
+  }
+
+  .ticket-primary-row div {
+    min-width: 5.125rem;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 0.5625rem;
+    background: rgb(255 255 255 / 3.5%);
+  }
+
+  .ticket-primary-row small,
+  .ticket-stub-label,
+  .ticket-stub dt {
+    display: block;
+    color: var(--muted);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ticket-primary-row strong {
+    display: block;
+    margin-top: 0.1875rem;
+    font-size: 0.87rem;
+    font-weight: 800;
+  }
+
+  .ticket-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem 1rem;
+    margin-top: 0.9375rem;
+  }
+
+  .ticket-meta-grid div {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .ticket-meta-grid small {
+    color: var(--muted);
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .ticket-meta-grid strong {
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  .ticket-stub {
+    display: grid;
+    width: 11.875rem;
+    flex: 0 0 11.875rem;
+    justify-items: center;
+    align-content: center;
+    gap: 0.5625rem;
+    padding: 1rem;
+    border-left: 1px dashed rgb(255 255 255 / 28%);
+    background: rgb(255 255 255 / 2.8%);
+    text-align: center;
+  }
+
+  .ticket-stub strong {
+    color: var(--primary-bright);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .ticket-stub span {
+    color: var(--muted);
+    font-size: 0.65rem;
+  }
+
+  .ticket-qr-image {
+    display: block;
+    width: 7.25rem;
+    height: 7.25rem;
+    padding: 0.25rem;
+    border-radius: 0.3125rem;
+    background: white;
+    object-fit: contain;
+  }
+
+  .ticket-stub dl {
+    display: grid;
+    width: 100%;
+    gap: 0.25rem;
+    margin: 0;
+  }
+
+  .ticket-stub dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4375rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgb(255 255 255 / 9%);
+  }
+
+  .ticket-stub dd {
+    margin: 0;
+    font-size: 0.69rem;
+    font-weight: 900;
+  }
+
+  .ticket-terms {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8125rem;
+    padding: 0.625rem 0.9375rem;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    background: rgb(255 255 255 / 2.5%);
+  }
+
+  .ticket-terms div:first-child {
+    display: grid;
+    gap: 0.1875rem;
+  }
+
+  .ticket-terms strong {
+    color: var(--primary-bright);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .ticket-terms span {
+    color: var(--muted);
+    font-size: 0.61rem;
+    line-height: 1.4;
+  }
+
+  .ticket-barcode {
+    display: flex;
+    min-width: 11.875rem;
+    height: 1.8125rem;
+    overflow: hidden;
+    align-items: stretch;
+    padding: 0.1875rem;
+    background: white;
+  }
+
+  .ticket-barcode i {
+    display: block;
+    flex: 0 0 auto;
+    background: #05070d;
+  }
+
+  .ticket-side {
+    display: grid;
+    align-content: start;
+    gap: 0.875rem;
+  }
+
+  .ticket-note,
+  .ticket-side-card {
+    padding: 0.9375rem;
+    border: 1px solid var(--border);
+    border-radius: 0.8125rem;
+    background: rgb(11 16 28 / 76%);
+  }
+
+  .ticket-note {
+    display: flex;
+    align-items: start;
+    gap: 0.625rem;
+  }
+
+  .ticket-note>span {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid rgb(97 225 164 / 45%);
+    border-radius: 50%;
+    background: rgb(97 225 164 / 10%);
+    color: var(--success);
+  }
+
+  .ticket-note strong {
+    line-height: 1.2;
+  }
+
+  .ticket-note p {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .rewards-ticket-note>span {
+    border-color: rgb(139 213 255 / 40%);
+    background: rgb(139 213 255 / 10%);
+    color: var(--primary-bright);
+  }
+
+  .ticket-side-card h3 {
+    margin: 0;
+    color: white;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+  }
+
+  .ticket-side-card .summary-list {
+    margin: 0.875rem 0 0;
+  }
+
+  .ticket-combos {
+    margin: 0.75rem 0 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    background: rgb(255 255 255 / 2.5%);
+  }
+
+  .ticket-combos p {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.875rem;
+    margin: 0.375rem 0;
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  .ticket-actions {
+    display: grid;
+    gap: 0.5625rem;
+  }
+
+  .ticket-action {
+    display: inline-flex;
+    width: 100%;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0 1.125rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 0.77rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition:
+      transform 180ms ease,
+      background 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .ticket-action-ghost {
+    border-color: var(--border);
+    background: rgb(255 255 255 / 4%);
+    color: var(--foreground);
+  }
+
+  .ticket-action-ghost:hover {
+    border-color: rgb(112 127 255 / 55%);
+    background: rgb(95 109 255 / 14%);
+  }
+
+  .ticket-action-primary {
+    background: linear-gradient(110deg, var(--primary), #5367ff 62%, #7b56ff);
+    box-shadow: 0 0.75rem 2.125rem rgb(81 102 255 / 32%);
+    color: white;
+  }
+
+  .ticket-action-primary:hover {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 1rem 2.625rem rgb(81 102 255 / 50%);
+  }
+
+  @media (width <=70rem) {
+    .ticket-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ticket-side {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ticket-actions {
+      align-content: start;
+    }
+  }
+
+  @media (width <=42.5rem) {
+    .ticket-side {
+      grid-template-columns: 1fr;
+    }
+
+    .ticket-card-body {
+      display: grid;
+    }
+
+    .ticket-poster {
+      width: 9.375rem;
+      padding: 0.875rem 0 0 0.875rem;
+    }
+
+    .ticket-stub {
+      width: auto;
+      grid-template-columns: auto 1fr;
+      justify-items: start;
+      border-top: 1px dashed rgb(255 255 255 / 28%);
+      border-left: 0;
+      text-align: left;
+    }
+
+    .ticket-stub .ticket-qr-image {
+      grid-row: span 4;
+    }
+
+    .ticket-stub dl {
+      max-width: 14.375rem;
+    }
+
+    .ticket-brandmark span,
+    .ticket-barcode {
+      display: none;
+    }
+  }
+}
+
+/* Bản in vé: đúng khổ vé rạp 210mm × 99mm như frontend legacy. */
+@media print {
+  @page {
+    size: 210mm 99mm;
+    margin: 0;
+  }
+
+  html,
+  body,
+  main,
+  .ticket-section,
+  .ticket-layout {
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+    height: 99mm !important;
+    min-height: 99mm !important;
+    max-height: 99mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: white !important;
+  }
+
+  .site-header,
+  .site-footer,
+  .ticket-page-heading,
+  .ticket-side {
+    display: none !important;
+  }
+
+  .ticket-card {
+    display: grid !important;
+    width: 210mm !important;
+    height: 99mm !important;
+    grid-template-rows: 12mm 77mm 10mm;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    color: #111 !important;
+  }
+
+  .ticket-brandbar {
+    height: 12mm;
+    padding: 2.5mm 4mm;
+    border-bottom: 0.35mm solid #111;
+    background: #111 !important;
+  }
+
+  .ticket-brandmark img {
+    width: 39mm;
+    filter: grayscale(1) brightness(0) invert(1);
+  }
+
+  .ticket-brandmark span,
+  .ticket-brandbar>strong {
+    color: white !important;
+  }
+
+  .ticket-card-body {
+    display: grid !important;
+    height: 77mm;
+    grid-template-columns: 25mm 1fr 52mm;
+    overflow: hidden;
+  }
+
+  .ticket-poster {
+    width: 25mm;
+    height: 77mm;
+    padding: 3mm 0 3mm 3mm;
+  }
+
+  .ticket-poster img {
+    width: 22mm;
+    height: 71mm;
+    border-radius: 1.5mm;
+    object-fit: cover;
+  }
+
+  .ticket-info {
+    padding: 3.3mm;
+  }
+
+  .ticket-info .eyebrow {
+    margin-bottom: 1mm;
+    color: #444 !important;
+    font-size: 6.5pt;
+  }
+
+  .ticket-info h2 {
+    margin: 0;
+    color: #111 !important;
+    font-size: 18pt;
+    line-height: 0.98;
+  }
+
+  .ticket-primary-row {
+    gap: 1.5mm;
+    margin-top: 2.4mm;
+  }
+
+  .ticket-primary-row div {
+    min-width: 19mm;
+    padding: 1.4mm 1.7mm;
+    border: 0.25mm solid #ccc;
+    border-radius: 1mm;
+    background: white !important;
+  }
+
+  .ticket-primary-row small,
+  .ticket-stub-label,
+  .ticket-stub dt {
+    color: #555 !important;
+    font-size: 5.7pt;
+  }
+
+  .ticket-primary-row strong {
+    margin-top: 0.4mm;
+    color: #111 !important;
+    font-size: 8.5pt;
+  }
+
+  .ticket-meta-grid {
+    gap: 1.4mm 3mm;
+    margin-top: 2.2mm;
+  }
+
+  .ticket-meta-grid small {
+    color: #666 !important;
+    font-size: 5.8pt;
+  }
+
+  .ticket-meta-grid strong {
+    color: #111 !important;
+    font-size: 7.8pt;
+  }
+
+  .ticket-stub {
+    display: grid !important;
+    width: 52mm;
+    height: 77mm;
+    align-content: center;
+    gap: 1.5mm;
+    padding: 2.5mm 4mm;
+    border-top: 0;
+    border-left: 0.35mm dashed #777;
+    background: #fafafa !important;
+    text-align: center;
+  }
+
+  .ticket-qr-image {
+    width: 27mm;
+    height: 27mm;
+    padding: 1.2mm;
+  }
+
+  .ticket-stub strong {
+    color: #111 !important;
+    font-size: 9pt;
+  }
+
+  .ticket-stub span,
+  .ticket-stub dd {
+    color: #111 !important;
+    font-size: 6.5pt;
+  }
+
+  .ticket-stub dl div {
+    padding-top: 0.8mm;
+    border-color: #d2d2d2;
+  }
+
+  .ticket-terms {
+    height: 10mm;
+    gap: 2mm;
+    padding: 1.5mm 4mm;
+    border-top: 0.35mm solid #111;
+    background: white !important;
+  }
+
+  .ticket-terms strong {
+    color: #111 !important;
+    font-size: 6.5pt;
+  }
+
+  .ticket-terms span {
+    color: #333 !important;
+    font-size: 5.6pt;
+  }
+
+  .ticket-barcode {
+    display: flex !important;
+    width: 49mm;
+    min-width: 49mm;
+    height: 7mm;
+    padding: 0.6mm;
+    border: 0.25mm solid #ccc;
   }
 }
